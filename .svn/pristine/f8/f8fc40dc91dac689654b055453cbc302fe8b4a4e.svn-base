@@ -1,0 +1,75 @@
+package game;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+
+/**
+ * An environment object that can hold items inside somewhat like the players
+ * inventory.
+ * 
+ * @author Celdamar
+ */
+public class Container extends EnvironmentObject implements Serializable {
+	private boolean open = false;
+	private boolean locked;
+	/**
+	 *
+	 */
+	private static final long serialVersionUID = 1L;
+	private ArrayList<Item> items;
+
+	public Container(String image, String name, ArrayList<Item> i,
+			boolean locked) {
+		super(image, name);
+		if (items == null) {
+			items = new ArrayList<Item>();
+		} else {
+			items = i;
+		}
+		this.locked = locked;
+	}
+
+	/**
+	 * Adds an item to the container
+	 * 
+	 * @param item
+	 */
+	public void additem(Item item) {
+		this.items.add(item);
+	}
+
+	/**
+	 * Removes and returns all the item from the container
+	 * 
+	 * @return items
+	 */
+	public ArrayList<Item> removeAll() {
+		ArrayList<Item> temp = items;
+		items.removeAll(temp);
+		return temp;
+	}
+
+	/**
+	 * Returns all the items in the container
+	 * 
+	 * @return items
+	 */
+	public ArrayList<Item> getItems() {
+		return items;
+	}
+
+	public void interact() {
+		if (!open) {
+			if (!locked) {
+				super.setImage("sprites/openchest.png");
+				open = true;
+			}
+			
+		} else {
+			super.setImage("sprites/closedchest.png");
+			open = false;
+		}
+
+	}
+
+}

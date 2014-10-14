@@ -1,0 +1,71 @@
+package game;
+
+import java.util.ArrayList;
+
+import game.EnvironmentObject;
+import game.Item;
+
+/**
+ * An object that the player can move through when it is open. Otherwise they
+ * cannot move through until they have the right key.
+ * 
+ * @author Marcel Blokker
+ * 
+ */
+public class Door extends EnvironmentObject {
+	private boolean open;
+	private String key;
+
+	public Door(String i, String n, boolean open, String key) {
+		super(i, n);
+		this.open = open;
+		this.key = key;
+	}
+
+	/**
+	 * returns whether the door is open or not
+	 * 
+	 * @return boolean for door being open.
+	 */
+	public boolean getOpen() {
+		return open;
+	}
+
+	/**
+	 * set whether the door is open or not
+	 * 
+	 * @param op
+	 *            what to set open to.
+	 */
+	public void setOpen(boolean op) {
+		open = op;
+	}
+
+	/**
+	 * Player can try to open a door. The door will open if the player has the
+	 * correct Key in their inventory.
+	 * 
+	 * @param inventory
+	 *            - the players inventory
+	 * @return whether the door was opened or not.
+	 */
+	public boolean tryOpen(ArrayList<Item> inventory) {
+		for (Item i : inventory) {
+			if (i.getName().equals(key)) {
+				open = true;
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * return the name of the key
+	 * 
+	 * @return name of key
+	 */
+	public String getKey() {
+		return key;
+	}
+
+}

@@ -1,0 +1,14 @@
+package game;
+/**
+ * Represents a Key object to open a door. The door and key must match for the door to open.
+ * @author duligajaco
+ *
+ */
+public class Key extends Item {
+
+	public Key(String image, String name, boolean pickUp) {
+		super(image, name, pickUp);
+	}
+
+	
+}

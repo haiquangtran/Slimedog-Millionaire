@@ -1,0 +1,91 @@
+package gui;
+
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.image.BufferedImage;
+
+import javax.swing.InputMap;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollBar;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.KeyStroke;
+
+import util.ImageLibrary;
+
+import game.Item;
+import game.Player;
+import game.Tile;
+import game.World;
+
+/**
+ * The display for the game part of the game Client
+ * @author Oliver Greenaway
+ *
+ */
+public class GameCanvas extends Canvas /*implements KeyListener*/{
+
+	private static final long serialVersionUID = -2241158400287323322L;
+
+	public World world;		//Game world containing the 2d array
+	private GameFrame parent;
+
+	private boolean inventory = false;
+
+	/**
+	 * Constructs a new GameCanvas with the given width and height
+	 * @param width The Width of the canvas
+	 * @param height The Height of the canvas
+	 */
+	public GameCanvas(int width, int height, GameFrame parent) {
+		super(width, height);
+		this.setBackground(Color.BLACK);
+		this.parent = parent;
+	}
+
+	/**
+	 * Draws everything in the world.
+	 */
+	@Override
+	public void paint(Graphics g){
+		if(world != null){
+			BufferedImage img = new BufferedImage(this.getWidth(), this.getHeight(), BufferedImage.TYPE_INT_ARGB);
+			world.worldToImage(img);
+			Graphics ig = img.getGraphics();
+			ig.setColor(Color.red);
+			ig.drawImage(ImageLibrary.get("UI/inventory.png"),this.getWidth()-100, 0, null);
+			if(inventory){
+				ig.setColor(Color.GRAY);
+				ig.fillRect(this.getWidth()-300, 40, 300, 500);
+				/*if(world.masterPlayer().getInventory().size()>0){
+					ig.drawImage(ImageLibrary.get("sprites/key.png"),this.getWidth()-290, 50,null);
+				}*/
+				int x = this.getWidth() - 290;
+				int y = 50;
+				int pos = 0;
+				for(Item i : world.masterPlayer().getInventory()){
+					ig.drawImage(ImageLibrary.get(i.getImage()), x, y,null);
+					x+=50;
+					if(pos >= 6){
+						x = this.getWidth()-290;
+						y += 50;
+						pos = 0;
+					}else {pos++;}
+					
+				}
+			}
+			g.drawImage(img, 0, 0, this.getWidth(), this.getHeight(), null);
+		}
+	}
+
+	public void toggleInventory() {
+		inventory = !inventory;
+		System.out.println(inventory);
+	}
+
+
+}

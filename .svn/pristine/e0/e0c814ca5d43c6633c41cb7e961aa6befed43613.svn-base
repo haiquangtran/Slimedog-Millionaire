@@ -1,0 +1,11 @@
+package game;
+
+import game.Player.Direction;
+
+public abstract class Characters extends GameObject{
+	
+	public Characters(String image, String name, boolean isMoveable) {
+		super(image, name, isMoveable);
+	}
+	public abstract void move(Direction dir);
+}

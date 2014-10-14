@@ -1,0 +1,19 @@
+package game;
+
+import java.io.Serializable;
+
+/** Immovable scenery objects.
+ * @author Marcel Blokker
+ *
+ */
+public class EnvironmentObject extends GameObject implements Serializable {
+
+	/**
+	 *
+	 */
+	private static final long serialVersionUID = 1L;
+
+	public EnvironmentObject(String i, String n) {
+		super(i, n, false);
+		}
+}

@@ -1,0 +1,91 @@
+package game;
+
+import java.awt.Point;
+import java.io.Serializable;
+
+/**
+ * Class that represents a Tile.
+ * Tile has a item, row and column.
+ *
+ * row and column are indexes in a 2d array where each Tile is stored
+ * e.g. array[row][column]
+ *
+ * @author Quang Tran
+ *
+ */
+public class Tile  implements Serializable{
+	/**
+	 *
+	 */
+	private static final long serialVersionUID = 1L;
+	private GameObject item;
+	private int row;
+	private int col;
+	public static final int tileSize = 30;
+
+	/**
+	 * Tile contains a item, and needs fields for the position
+	 * in the 2d array.
+	 *
+	 * @param item - Tile containing the item
+	 * @param row -row index in 2d array of tile position
+	 * @param col -column index in 2d array of tile position
+	 */
+	public Tile(GameObject item, int row, int col){
+		this.item = item;
+		this.row = row;
+		this.col = col;
+	}
+
+	/**
+	 * Returns the item in the tile.
+	 * @return item contained within the Tile
+	 */
+	public GameObject getItem(){
+		return item;
+	}
+
+	public void setItem(GameObject item){
+		this.item = item;
+	}
+
+	public int getRow(){
+		return row;
+	}
+
+	public int getCol(){
+		return col;
+	}
+
+	/**
+	 * A point containing the position x and y of the tile.
+	 * @return Point.
+	 */
+	public Point getPoint(){
+		return new Point(row * tileSize, col * tileSize);
+	}
+
+<<<<<<< .working
+	/**
+	 * Returns the x index of the tile within the array of tiles
+	 * @return
+	 */
+	public int getX(){
+		return col;
+	}
+
+	/**
+	 * Returns the y index of the tile within the array of tiles
+	 * @return
+	 */
+	public int getY(){
+		return row;
+	}
+
+=======
+>>>>>>> .merge-right.r91
+	public String toString(){
+		return String.format("%s %d , %d", this.item.toString(), row, col);
+	}
+
+}

@@ -1,0 +1,35 @@
+package game;
+
+import game.Player.Direction;
+
+public abstract class Characters extends GameObject{
+	protected float posX;
+	protected float posY;
+	
+	public Characters(String image, String name, boolean isMoveable) {
+		super(image, name, isMoveable);
+	}
+	public abstract void move(Direction dir);
+	
+	public boolean collision (Characters other){
+		if(this.posX < other.posX+Tile.tileSize && this.posX >= other.posX){
+			if(this.posY < other.posY+Tile.tileSize && this.posY >= other.posY){
+			return true;
+			}
+		}
+		if(other.posX < this.posX+Tile.tileSize && other.posX >= this.posX){
+			if(other.posY < this.posY+Tile.tileSize && other.posY >= this.posY){
+			return true;
+			}
+		}
+		return false;
+	}
+	
+	public float getX(){
+		return posX;
+	}
+	
+	public float getY(){
+		return posY;
+	}
+}

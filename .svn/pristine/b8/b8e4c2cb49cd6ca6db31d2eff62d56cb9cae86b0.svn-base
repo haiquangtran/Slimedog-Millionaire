@@ -1,0 +1,497 @@
+package game;
+
+import game.Player.Direction;
+import gui.GameFrame;
+
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.image.BufferedImage;
+import java.io.InputStream;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Scanner;
+
+import util.ImageLibrary;
+import datastorage.StoreData;
+
+/**
+ * Class that represents the world. Contains a 2d array of gameobjects, in which
+ * could represent keys, doors etc. This class populates the world and is
+ * responsible for redrawing it.
+ *
+ * @author Hai Tran
+ *
+ */
+public class World implements Serializable {
+	/**
+	 *
+	 */
+	private static final long serialVersionUID = 1L;
+	public static final int mapSize = 70;
+	// Map containing all the tiles, which represent the world
+	private Tile[][] map = new Tile[mapSize][mapSize];
+
+	// The top left tile in the screen, so only the tiles on the screen are
+	// drawn.
+	private int xPos;
+	private int yPos;
+	private Direction direction;
+	private double transition;
+
+	// Players in the game
+	private Map<Integer,Player> players = new HashMap<Integer,Player>();
+
+	//NPC's
+	private ArrayList<NPC> npcs = new ArrayList<NPC>();
+
+	private int masterPlayer = 0;
+
+	// Player position
+	private int playerRow;
+	private int playerCol;
+
+	// Shows how many tiles away from center of screen (For offset of player)
+	private int middleRow = (GameFrame.screenWidth / Tile.tileSize/2);
+	private int middleCol = (GameFrame.screenHeight / Tile.tileSize/2);
+
+	// Item names
+	public static final String grass = "grass";
+	public static final String flower = "flower";
+	public static final String tree = "tree";
+	public static final String floor = "floor";
+	public static final String door = "door";
+	public static final String water = "water";
+	public static final String key = "key";
+	public static final String wall = "wall";
+	public static final String lockedchest = "lockedchest";
+	public static final String boulder = "boulder";
+
+	public World() {
+		setUpWorld();
+	}
+
+	public World(String file) {
+		// TODO Implement load world from file
+		setUpWorld();
+	}
+
+	String[] green = new String[]{"sprites/slimes/slime.png","sprites/slimes/slime2.png","sprites/slimes/slime3.png","sprites/slimes/slime4.png"};
+	String[] girl = new String[]{"sprites/slimes/slimeGirlFront.png","sprites/slimes/slimeGirlLeft.png","sprites/slimes/slimeGirlRight.png","sprites/slimes/slimeGirlBack.png"};
+	String[] blue = new String[]{"sprites/slimes/slimeBlueFront.png","sprites/slimes/slimeBlueLeft.png","sprites/slimes/slimeBlueRight.png","sprites/slimes/slimeBlueBack.png"};
+	String[] gang = new String[]{"sprites/slimes/slimeGangsterFront.png","sprites/slimes/slimeGangsterLeft.png","sprites/slimes/slimeGangsterRight.png","sprites/slimes/slimeGangsterBack.png"};
+
+
+	/**
+	 * Sets up the World and all the components in it, such as doors, rooms
+	 * etc...
+	 */
+	public void setUpWorld() {
+		//transition = 0.0;
+		Scanner scan;
+
+		InputStream file = ClassLoader
+				.getSystemResourceAsStream("Assets/Data/file.txt");
+		scan = new Scanner(file);
+
+		for (int j = 0; j < map.length; j++) {
+			char[] next = scan.next().toCharArray();
+			for (int i = 0; i < map[0].length; i++) {
+				String img = "";
+				String name = "";
+				char current = next[i];
+				if (current == 'x'){
+					img = "sprites/tree3.png";
+					name = tree;}
+				if (current == '-'){
+					img = "sprites/grass.png";
+					name = grass;}
+				if (current == 'y'){
+					img = "sprites/flower.png";
+					name = flower;}
+				if (current == 'w'){
+					img = "sprites/water.png";
+					name = water;}
+				if (current == 'l'){
+					img = "sprites/wall.png";
+					name = wall;}
+				if (current == 'k'){
+					img = "sprites/keyYellow.png";
+					name = key;
+					map[i][j] = new Tile(new Key(img, name,true), i, j);
+					continue;}
+				if (current == 'd'){
+					img = "sprites/door.png";
+					name = door;
+					map[i][j] = new Tile(new Door(img, name,false,key), i, j);
+					continue;}
+				if (current == 'f'){
+					img = "sprites/floor.png";
+					name = floor;}
+				if(current == 'c'){
+					img = "sprites/lockedchest.png";
+					name = lockedchest;
+					map[i][j] = new Tile(new Container(img, name,null), i, j);
+					continue;
+				}
+				if (current == 'o'){
+					img = "sprites/boulder.png";
+					name = boulder;
+					map[i][j] = new Tile(new Boulder(img, name, false), i, j);
+					continue;
+				}
+
+				map[i][j] = new Tile(new EnvironmentObject(img, name), i, j);
+			}
+		}
+		scan.close();
+		npcs.add(new NPC(gang, "bob", false, 15, 25, new Direction[]{Direction.DOWN,Direction.RIGHT,Direction.RIGHT,Direction.RIGHT,Direction.RIGHT,Direction.UP,Direction.LEFT,Direction.LEFT,Direction.LEFT,Direction.LEFT,}));
+		npcs.add(new NPC(green, "bob", false, 15, 15, new Direction[]{Direction.LEFT,Direction.LEFT,Direction.LEFT,Direction.LEFT,Direction.DOWN,Direction.RIGHT,Direction.RIGHT,Direction.RIGHT,Direction.RIGHT,Direction.UP}));
+		npcs.add(new NPC(blue, "bob", false, 13, 17, new Direction[]{Direction.LEFT,Direction.DOWN,Direction.RIGHT,Direction.LEFT,Direction.LEFT,Direction.LEFT,Direction.RIGHT,Direction.RIGHT,Direction.RIGHT,Direction.UP}));
+		npcs.add(new NPC(girl, "bob", false, 13, 14, new Direction[]{Direction.LEFT,Direction.LEFT,Direction.UP,Direction.UP,Direction.RIGHT,Direction.RIGHT,Direction.DOWN,Direction.DOWN}));
+		npcs.add(new NPC(green, "bob", false, 13, 20, new Direction[]{Direction.RIGHT,Direction.RIGHT,Direction.UP,Direction.LEFT,Direction.LEFT,Direction.LEFT,Direction.LEFT,Direction.DOWN,Direction.RIGHT,Direction.RIGHT}));
+		npcs.add(new NPC(blue, "bob", false, 15, 10, new Direction[]{Direction.LEFT,Direction.LEFT,Direction.LEFT,Direction.LEFT,Direction.DOWN,Direction.RIGHT,Direction.RIGHT,Direction.RIGHT,Direction.RIGHT,Direction.UP}));
+	}
+
+
+
+	/**
+	 * Sets the Fields needed for players position
+	 * according to where the player is in the array
+	 *
+	 * sets: playerRow and playerCol
+	 */
+	public void setPlayerPositionFields(){
+		if (players.size() > 0) {
+			playerRow = players.get(masterPlayer).getX();
+			playerCol = players.get(masterPlayer).getY();
+		}
+	}
+
+
+	public void redraw(Graphics g) {
+		// the size of the "game window"
+		int screenWidth = mapSize;
+		int screenHeight = mapSize;
+
+		// Get players position in array (PLAYER 1)
+		setPlayerPositionFields();
+
+		int startRow = playerRow - middleRow;
+		int startCol = playerCol - middleCol;
+		// BOUNDS CHECK - when map is made bigger
+
+
+		//Draws background tiles
+		BufferedImage image = ImageLibrary.get("sprites/grass.png");
+		for (int i = 0; i < screenWidth; i++) {
+			for (int j = 0; j < screenHeight; j++) {
+				Tile tile = map[i][j];
+				g.drawImage(image, tile.getPoint().x
+						- (startRow * Tile.tileSize), tile.getPoint().y - (startCol * Tile.tileSize),
+						image.getWidth(), image.getHeight(), null);
+			}
+		}
+
+		// Draws the map relative to the player (Player in center)
+		for (int i = 0; i < screenWidth; i++) {
+			for (int j = 0; j < screenHeight; j++) {
+				Tile tile = map[i][j];
+				image = ImageLibrary.get(tile.getItem()
+						.getImage());
+				int offset = image.getHeight() - Tile.tileSize;
+				// Translates it onto screen and draws so that drawing is
+				//Relative to player (player is in middle)
+
+				g.drawImage(image, tile.getPoint().x
+						- (startRow * Tile.tileSize), tile.getPoint().y -offset- (startCol * Tile.tileSize),
+						image.getWidth(), image.getHeight(), null);
+
+				for(Player p : players.values()){
+					if(p.getX() == i && p.getY() == j){
+						p.draw(g, tile.getPoint().x
+								- (startRow * Tile.tileSize), tile.getPoint().y - (startCol * Tile.tileSize));
+					}
+				}
+			}
+		}
+		//Draw npcs
+		for(NPC npc:npcs){
+			npc.draw(g,startRow,startCol);
+		}
+
+		int pX = players.get(masterPlayer).getX();
+		int pY = players.get(masterPlayer).getY();
+		GameObject playerTile = map[pX][pY].getItem();
+		boolean inside = playerTile.getName().equals("floor");
+		g.setColor(Color.black);
+
+		for(int i=0; i<screenWidth; i++){
+			for(int j=0; j<screenHeight; j++){
+				Tile tile = map[i][j];
+				String type = tile.getItem().getName();
+				if(type.equals("floor") && !inside){
+					g.fillRect(tile.getPoint().x
+						- (startRow * Tile.tileSize), tile.getPoint().y - (startCol * Tile.tileSize),
+						Tile.tileSize, Tile.tileSize);
+				}else if(!type.equals("floor") && inside && !type.equals("door") && !type.equals("wall")){
+					g.fillRect(tile.getPoint().x
+							- (startRow * Tile.tileSize), tile.getPoint().y - (startCol * Tile.tileSize),
+							Tile.tileSize, Tile.tileSize);
+				}
+			}
+		}
+	}
+
+	public Map<Integer,Player> getPlayers(){
+		return players;
+	}
+
+	public void worldToImage(BufferedImage bi){
+		Graphics g = bi.getGraphics();
+		g.setColor(Color.BLACK);
+		g.fillRect(0, 0, bi.getWidth(), bi.getHeight());
+		redraw(g);
+	}
+
+	/**
+	 * Method that returns the map of tiles
+	 * */
+	public Tile[][] getMap() {
+		return this.map;
+	}
+
+	/**
+	 * method that moves the area displayed on the screen. The player will
+	 * always be in the middle of this area.
+	 * Contains Game Logic:
+	 * Cannot move through tree, water or wall.
+	 *
+	 * @param dir
+	 *            the direction the player is being moved
+	 */
+
+
+
+	public void move(Direction dir, int uid) {
+		//Cannot move through tree, water or wall
+		Tile tile = checkTile(dir,uid,1);
+		GameObject tileItem = tile.getItem();
+		String tileName = tileItem.getName();
+
+		if (tileName.equals(boulder)){
+			((Boulder)tileItem).move(dir, uid, this);	//Move boulder
+		}
+
+		if (!tileName.equals(tree)
+				&& !tileName.equals(water)
+				&& !tileName.equals(wall)
+				&& checkDoor(dir,uid,tileName,tileItem)
+				&& !tileName.equals(boulder)){
+
+			//Pick up key
+			if (tileName.equals(key)){
+				players.get(uid).getInventory().add((Item)tileItem);
+				players.get(uid).printInventory();
+				//Key with grass
+				replaceTile(dir,uid,"sprites/grass.png", grass);
+			}
+			//Move player
+			players.get(uid).move(dir);
+		}
+	}
+
+	public boolean checkDoor(Direction dir, int uid, String tileName, GameObject tile) {
+		//(((tileName.equals(door)))? (((Door)tile).getOpen()? true:((Door)tile).tryOpen(players.get(uid).getInventory()))  : true)
+		if(tileName.equals(door)){
+			if(((Door)tile).getOpen()){
+				return true;
+			} else if (((Door)tile).tryOpen(players.get(uid).getInventory())){
+				return true;
+			} return false;
+
+		} else {
+			return true;
+		}
+	}
+
+	public void rotate() {
+
+
+	}
+
+	/**
+	 * Used for game logic -
+	 * Checks what the surrounding tile is given the direction, and returns it.
+	 * Checks the tiles 1 space away from the player.
+	 *
+	 * Returns null if there are no tiles in the specified direction
+	 *
+	 * @param dir - Direction that the player will move
+	 * @return	Tile that is next to the player, given the direction,
+	 * 			returns null if there are no tiles in that direction
+	 */
+	public Tile checkTile(Direction dir, int uid, int distance){
+		//Find out where the player is in array
+		//setPlayerPositionFields();
+		Player p = players.get(uid);
+		int pRow = p.getX();
+		int pCol = p.getY();
+
+		if (dir == Direction.DOWN && pCol+distance < mapSize && pCol +distance >=0){
+			Tile tile = map[pRow][pCol+distance];
+			return tile;
+		} else if (dir == Direction.UP && pCol-distance < mapSize && pCol -distance >=0){
+			Tile tile = map[pRow][pCol-distance];
+			return tile;
+
+		} else if (dir == Direction.RIGHT && pRow+distance < mapSize && pRow +distance >=0){
+			Tile tile = map[pRow+distance][pCol];
+			return tile;
+
+		} else if (dir == Direction.LEFT && pRow-distance < mapSize && pRow-distance >=0){
+			Tile tile = map[pRow-distance][pCol];
+			return tile;
+		}
+
+		return null;
+	}
+
+
+	/**
+	 *
+	 * Replaces the tile in the map where the player will move to
+	 * with a grass tile. (used for picking up items)
+	 *
+	 * @param dir - Direction that the player will move to
+	 * @param uid - player identification
+	 * @param image - string of image location
+	 * @param name - name of image.
+	 */
+	public void replaceTile(Direction dir,int uid, String image, String name){
+
+		Player p = players.get(uid);
+		int pRow = p.getX();
+		int pCol = p.getY();
+
+		if (dir == Direction.DOWN && pCol+1 < mapSize && pCol +1 >=0){
+			map[pRow][pCol+1].setItem(new EnvironmentObject(image,name));
+		} else if (dir == Direction.UP && pCol-1 < mapSize && pCol -1 >=0){
+			map[pRow][pCol-1].setItem(new EnvironmentObject(image,name));
+		} else if (dir == Direction.RIGHT && pRow+1 < mapSize && pRow +1 >=0){
+			map[pRow+1][pCol].setItem(new EnvironmentObject(image,name));
+		} else if (dir == Direction.LEFT && pRow-1 < mapSize && playerRow-1 >=0){
+			map[pRow-1][pCol].setItem(new EnvironmentObject(image,name));
+		}
+
+	}
+
+
+	/**
+	 * Adds a player to the game and returns a id
+	 *
+	 * @return
+	 */
+	public int registerPlayer(int uid) {
+		players.put(uid,new Player(new String[]{"sprites/slimes/slimeGangsterFront.png",
+				"sprites/slimes/slimeGangsterLeft.png", "sprites/slimes/slimeGangsterRight.png",
+		"sprites/slimes/slimeGangsterBack.png" },"test", false, 4,4));
+
+		return uid;
+	}
+
+	public int registerPlayer(int uid,int x, int y) {
+		players.put(uid,new Player(new String[]{"sprites/slimes/slimeGangsterFront.png",
+				"sprites/slimes/slimeGangsterLeft.png", "sprites/slimes/slimeGangsterRight.png",
+		"sprites/slimes/slimeGangsterBack.png" },"test", false, x,y));
+
+		return uid;
+	}
+
+	private int clockTicks = 0;
+
+	/**
+	 * Called at each game iteration
+	 */
+	public void clockTick() {
+
+		//Save world state every 10 seconds//
+		if(clockTicks >= 500){
+			StoreData.saveGameState(this);
+			clockTicks = 0;
+		}else{
+			clockTicks++;
+		}
+		/////////END OF SAVE CODE////////////
+
+		/*// System.out.println(transition);
+		if (transition != 0) {
+			if (direction == Direction.UP && yPos > 0)
+				yPos--;
+			if (direction == Direction.DOWN && yPos < map[0].length)
+				yPos++;
+			if (direction == Direction.LEFT && xPos > 0)
+				xPos--;
+			if (direction == Direction.RIGHT && xPos < map.length)
+				xPos++;
+		}*/
+		for(Player p : players.values()){
+			p.clockTick();
+
+		}
+		for(NPC npc : npcs){
+			npc.clockTick();
+		}
+		// System.out.println(xPos + " " + yPos);
+
+	}
+
+	/**
+	 * Returns the width of the world
+	 *
+	 * @return
+	 */
+	public int width() {
+		return mapSize;
+	}
+
+	/**
+	 * Returns the height of the world
+	 *
+	 * @return
+	 */
+	public int height() {
+		return mapSize;
+	}
+
+	/**
+	 * Returns the player with the matching id
+	 *
+	 * @param uid
+	 * @return
+	 */
+	public Player player(int uid) {
+		return players.get(uid);
+	}
+
+
+	public Player masterPlayer(){
+		return players.get(masterPlayer);
+	}
+
+	/**
+	 * Remove the player with the corresponding id from the game
+	 *
+	 * @param uid
+	 */
+	public void disconnectPlayer(int uid) {
+		// TODO Auto-generated method stub
+
+	}
+
+	public void setMasterPlayer(int uid){
+		masterPlayer = uid;
+	}
+
+}

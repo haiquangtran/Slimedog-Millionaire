@@ -1,0 +1,192 @@
+package main;
+
+import game.World;
+import gui.GameCanvas;
+import gui.GameFrame;
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
+
+import datastorage.StoreData;
+
+import networking.GameClock;
+import networking.Master;
+import networking.Slave;
+
+public class Main {
+
+	public static void main(String[] args) {
+		// Ensures arguments exist
+		if (args.length < 1) {
+			System.out
+					.println("Arguments missing\nFor Client: -client\nFor Server: -server [load filename]\n");
+			// Checks for Client option
+		} else if (args[0].equalsIgnoreCase("-client")) {
+			// Ensures -client is not followed by any more arguments
+			if (args.length == 1) {
+				// Starts Game as Client
+				new GameFrame();
+			} else {
+				System.out.println("No arguments required after -client\n");
+			}
+			// Checks for Server option
+		} else if (args[0].equalsIgnoreCase("-server")) {
+			// Ensures -server is followed by one and only one argument
+			if (args.length >= 1 && args.length < 3) {
+				// If no loadFile is given then create a new server game
+				if (args.length == 1) {
+					runServer();
+				}
+				// Ensures the filename is followed by the file type .xml
+				else if (args[1].endsWith(".xml")) {
+					// Starts Game as Server
+					runServerFromFile(args[1]);
+				} else {
+					System.out.println("Expected .xml file as load file\n");
+				}
+			} else {
+				System.out
+						.println("Invalid Arguments follow -server, -server [filename]\n");
+			}
+			// Catches invalid Arguments
+		} else {
+			System.out
+					.println("Invalid Arguments\nFor Client: -client\nFor Server: -server [load filename]\n");
+		}
+	}
+
+	private static void runServerFromFile(String file) {
+		try {
+			FileInputStream fileIn = new FileInputStream(file);
+			World game = StoreData.loadGameState(fileIn);
+			GameClock clk = new GameClock(20, game, null);
+
+			// Listen for connections
+			System.out.println("SERVER LISTENING ON PORT 4443");
+			int maxClients = 4;
+			try {
+				Master[] connections = new Master[maxClients];
+				// Now, we await connections.
+				ServerSocket ss = new ServerSocket(4443);
+				while (true) {
+					// Wait for a socket
+					Socket s = ss.accept();
+					System.out.println("ACCEPTED CONNECTION FROM: "
+							+ s.getInetAddress());
+					DataInputStream in = new DataInputStream(s.getInputStream());
+					int uid = 0;  //TODO sync proper ids being hash of username
+					uid = game.registerPlayer(uid);
+					connections[--maxClients] = new Master(s, uid, 5, game);
+					connections[maxClients].start();
+					if (maxClients < 4) {
+						startGame(clk, game, connections);
+					}
+				}
+			} catch (IOException e) {
+				System.err.println("I/O error: " + e.getMessage());
+			}
+		} catch (FileNotFoundException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+
+	}
+
+	private static void runServer() {
+		World game = new World();
+		GameClock clk = new GameClock(20, game, null);
+
+		// Listen for connections
+		System.out.println("SERVER LISTENING ON PORT 4443");
+		int maxClients = 4;
+		try {
+			Master[] connections = new Master[maxClients];
+			// Now, we await connections.
+			ServerSocket ss = new ServerSocket(4443);
+			while (true) {
+				// Wait for a socket
+				Socket s = ss.accept();
+				System.out.println("ACCEPTED CONNECTION FROM: "
+						+ s.getInetAddress());
+				DataInputStream in = new DataInputStream(s.getInputStream());
+				int uid = 0;  //TODO sync proper ids being hash of username
+				uid = game.registerPlayer(uid);
+				connections[--maxClients] = new Master(s, uid, 5, game);
+				connections[maxClients].start();
+				if (maxClients < 4) {
+					startGame(clk, game, connections);
+				}
+			}
+		} catch (IOException e) {
+			System.err.println("I/O error: " + e.getMessage());
+		}
+	}
+
+	/**
+	 * The following method controls a multi-user game. When a given game is
+	 * over, it will simply restart the game with whatever players are
+	 * remaining. However, if all players have disconnected then it will stop.
+	 *
+	 * @param clk
+	 * @param game
+	 * @param connections
+	 * @throws IOException
+	 */
+	private static void startGame(GameClock clk, World game,
+			Master[] connections) throws IOException {
+		// save initial state of board, so we can reset it.
+		byte[] state = game.toByteArray();
+
+		clk.start(); // start the clock ticking!!!
+
+		// loop forever
+		while(atleastOneConnection(connections)) {
+			Thread.yield();
+
+		}
+	}
+
+	/**
+	 * Check whether or not there is at least one connection alive.
+	 *
+	 * @param connections
+	 * @return
+	 */
+	private static boolean atleastOneConnection(Master[] connections) {
+		for (Master m : connections) {
+			if (m != null && m.isAlive()) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public static void runClient(String addr, GameFrame gameFrame, int uid)
+			throws IOException {
+<<<<<<< .working
+		try {
+			Socket s = new Socket(addr, 4443);
+			//TODO sync uid with server
+			//TESTING DEFINITION//
+			uid = 0;
+			//////////////////////
+			System.out.println("CLIENT CONNECTED TO " + addr + ":4443");
+			Slave slave = new Slave(s, uid);
+			slave.start();
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+			new GameFrame(true);
+		}
+=======
+		Socket s = new Socket(addr, 4443);
+		System.out.println("CLIENT CONNECTED TO " + addr + ":4443");
+		new Slave(s, gameFrame, uid).start();
+>>>>>>> .merge-right.r91
+	}
+
+}

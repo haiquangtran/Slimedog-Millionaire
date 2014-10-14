@@ -1,0 +1,90 @@
+package networking;
+
+import game.Player.Direction;
+import game.World;
+
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
+
+/**
+ * A master connection receives events from a slave connection via a socket.
+ * These events are registered with the world. The master connection is also
+ * responsible for transmitting information to the slave about the current world
+ * state.
+ *
+ * @author Oliver Greenaway
+ */
+public final class Master extends Thread {
+	private final World board;
+	private final int broadcastClock;
+	private final int uid;
+	private final Socket socket;
+
+	/**
+	 * Constructs a master on the server, takes input from slaves and changes
+	 * the global world
+	 *
+	 * @param socket
+	 * @param uid
+	 * @param broadcastClock
+	 * @param board
+	 */
+	public Master(Socket socket, int uid, int broadcastClock, World board) {
+		this.board = board;
+		this.broadcastClock = broadcastClock;
+		this.socket = socket;
+		this.uid = uid;
+	}
+
+	/**
+	 * Executes the master loop. Retrieves input from slaves and changes the
+	 * world state.
+	 */
+	public void run() {
+		try {
+
+			ObjectInputStream input = new ObjectInputStream(socket.getInputStream());
+			ObjectOutputStream output = new ObjectOutputStream(
+					socket.getOutputStream());
+
+			output.writeObject(board);
+			boolean exit = false;
+			while (!exit) {
+				try {
+					if (input.available() != 0) {
+						// read direction event from client.
+						int uid = input.readInt();
+						int dir = input.readInt();
+						switch (dir) {
+						case 1:
+							board.move(Direction.UP,uid);
+							break;
+						case 2:
+							board.move(Direction.DOWN,uid);
+							break;
+						case 3:
+							board.move(Direction.RIGHT,uid);
+							break;
+						case 4:
+							board.move(Direction.LEFT,uid);
+							break;
+						}
+						output.writeInt(uid);
+						output.writeInt(dir);
+						output.flush();
+					}
+					output.flush();
+					// Now, broadcast the state of the board to client
+					Thread.sleep(broadcastClock);
+				} catch (InterruptedException e) {
+				}
+			}
+			socket.close(); // release socket
+		} catch (IOException e) {
+			System.err.println("PLAYER " + uid + " DISCONNECTED");
+			board.disconnectPlayer(uid);
+		}
+	}
+}

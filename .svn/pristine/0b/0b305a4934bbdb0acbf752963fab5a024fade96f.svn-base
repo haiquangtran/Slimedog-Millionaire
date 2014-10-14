@@ -1,0 +1,52 @@
+package networking;
+
+import game.World;
+import gui.GameFrame;
+
+/**
+ * The GameClock Thread is responsible for producing a consistent "pulse" which
+ * is used to update the game state, and refresh the display.
+ * 
+ * @author Oliver Greenaway
+ * 
+ */
+public class GameClock extends Thread {
+	private final int delay;
+	private final World game;
+	private final GameFrame display;
+
+	/**
+	 * Creates a new GameClock with the specified delay that acts on the world
+	 * displayed on the given display
+	 * 
+	 * @param delay
+	 *            Pause between each clock tick
+	 * @param game
+	 *            World that will be refreshed each clock tick
+	 * @param display
+	 *            Frame that displays game
+	 */
+	public GameClock(int delay, World game, GameFrame display) {
+		this.delay = delay;
+		this.game = game;
+		this.display = display;
+	}
+
+	/**
+	 * Loops with a specified delay updating the game and redisplaying.
+	 */
+	public void run() {
+		while (true) {
+			// Loop forever
+			try {
+				Thread.sleep(delay);
+				game.clockTick();
+				if (display != null) {
+					display.repaint();
+				}
+			} catch (InterruptedException e) {
+				// should never happen
+			}
+		}
+	}
+}

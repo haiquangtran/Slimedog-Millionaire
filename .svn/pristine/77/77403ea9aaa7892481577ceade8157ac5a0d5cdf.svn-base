@@ -1,0 +1,39 @@
+package game;
+/**
+ * Abstract class representing objects that can be contained in a tile.
+ * @author Jacob Duligall
+ *
+ */
+public abstract class GameObject {
+	private String image;
+	private String name;
+	private boolean pickUp;
+	
+	/**
+	 * 
+	 * @param image	The name of the image
+	 * @param name	The name of the item
+	 * @param move whether the gameobject can be picked up by the player
+	 */
+	public GameObject(String image, String name, boolean pickUp){
+		this.image = image;
+		this.name = name;
+		this.pickUp = pickUp;
+	}
+	
+	public boolean isPickUp(){
+		return pickUp;
+	}
+	
+	public String getImage(){
+		return image;
+	}
+	
+	public String getName(){
+		return name;
+	}
+	
+	public String toString(){
+		return name;
+	}
+}

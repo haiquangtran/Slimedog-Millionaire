@@ -1,0 +1,83 @@
+package networking;
+
+import game.World;
+import gui.GameCanvas;
+import gui.GameFrame;
+
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.Socket;
+import java.net.UnknownHostException;
+
+public class Client implements KeyListener {
+
+	private static GameFrame clientWindow;
+	private static Socket socket;
+	private static DataOutputStream output;
+	private static DataInputStream input;
+
+	public Client() {
+		clientWindow = new GameFrame();
+	}
+
+	public static void connect(String host, int port, String username) {
+		try {
+			socket = new Socket(host, port);
+			System.out.println("CLIENT CONNECTED TO " + host + ":" + port);
+			run();
+		} catch (UnknownHostException e) {
+			System.err.println("Host invalid: " + host);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private static void run() {
+		try {
+			output = new DataOutputStream(socket.getOutputStream());
+			input = new DataInputStream(socket.getInputStream());
+			while (true) {
+				int amount = input.readInt();
+				byte[] data = new byte[amount];
+				input.readFully(data);
+				World.fromByteArray(data);
+				clientWindow.repaint();
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	@Override
+	public void keyTyped(KeyEvent e) {}
+
+	@Override
+	public void keyPressed(KeyEvent e) {
+		try{
+		switch(e.getKeyCode()){
+		case KeyEvent.VK_UP:
+			output.writeInt(1);
+			break;
+		case KeyEvent.VK_LEFT:
+			output.writeInt(2);
+			break;
+		case KeyEvent.VK_RIGHT:
+			output.writeInt(3);
+			break;
+		case KeyEvent.VK_DOWN:
+			output.writeInt(4);
+			break;
+		}
+		output.flush();
+		}catch(IOException f){
+			f.printStackTrace();
+		}
+	}
+
+	@Override
+	public void keyReleased(KeyEvent e) {}
+
+}

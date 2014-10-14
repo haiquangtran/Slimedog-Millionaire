@@ -1,0 +1,175 @@
+package game;
+
+import gui.GameCanvas;
+import gui.GameFrame;
+
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Point;
+import java.awt.image.BufferedImage;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.ArrayList;
+
+import util.ImageLibrary;
+
+public class Player extends Characters implements Serializable {
+	/**
+	 *
+	 */
+	private static final long serialVersionUID = 1L;
+	private ArrayList<GameObject> inventory = new ArrayList<GameObject>();
+	public Direction direction;
+	public double transition;
+	public String[] images;
+	private int i = 0;
+	private int j = 0;
+	private boolean up = true;
+
+	public static enum Direction {
+		LEFT, RIGHT, UP, DOWN;
+	}
+
+	public Player(String[] images, String name, boolean isMoveable, int x, int y) {
+		super(images, name, isMoveable, x, y);
+		direction = Direction.LEFT;
+		transition = 0.0;
+		this.images = images;
+	}
+
+	public ArrayList<GameObject> getInventory() {
+		return inventory;
+	}
+
+	public void printInventory(){
+		System.out.println("INVENTORY ---------------------------------------");
+		for (GameObject items: inventory){
+			System.out.println(items.toString());
+		}
+		System.out.println("-------------------------------------------------");
+	}
+
+	public void addItem(Item i) {
+		inventory.add(i);
+	}
+
+	/**
+	 * Will begin the player movement to another tile.
+	 *
+	 * @param dir
+	 *            the Direction the player is wanting to move in
+	 */
+	@Override
+	public void move(Direction dir) { // TODO needs to be implemented properly
+		switch (dir) {
+		case UP:
+			i=3;
+			moveUp();
+			break;
+		case DOWN:
+			i=0;
+			moveDown();
+			break;
+		case LEFT:
+			i=1;
+			moveLeft();
+			break;
+		case RIGHT:
+			i=2;
+			moveRight();
+			break;
+		}
+	}
+
+	public void interact() {
+		// interact with items derp derp derp
+	}
+
+	/**
+	 * Updates the players current transition between tiles.
+	 */
+	public void clockTick() {
+		if (up) {
+			j += 1;
+		} else {
+			j -= 1;
+		}
+		if (j > 5) {
+			up = false;
+		}
+		if (j < 1) {
+			up = true;
+		}
+		if (transition == 0.0)
+			return; // the player is not currently moving
+		/*
+		 * if(direction == Direction.LEFT){ posX -=Tile.tileSize/4.0; }else
+		 * if(direction == Direction.RIGHT){ posX +=Tile.tileSize/4.0; }else
+		 * if(direction == Direction.UP){ posY -= Tile.tileSize/4.0; }else
+		 * if(direction == Direction.DOWN){ posY += Tile.tileSize/4.0; }
+		 */
+		if (transition == 1.0) {
+			transition = 0.0;
+
+			return;
+		}
+		transition += 0.25; // how many steps there are
+	}
+
+	public void draw(Graphics g, int startRow, int startCol) {
+
+		// while there is no sprites
+		if (images == null) {
+			g.setColor(Color.GREEN);
+			g.fillOval(GameFrame.screenWidth / 2, GameFrame.screenHeight / 2
+					- (int)j, Tile.tileSize, Tile.tileSize);
+		} else {
+			BufferedImage img = ImageLibrary.get(images[i]);
+			g.drawImage(img, GameFrame.screenWidth / 2, GameFrame.screenHeight
+					/ 2 - (int)j - img.getHeight()/2, null);
+//
+		}
+
+	}
+
+	public static Player fromInputStream(DataInputStream din)
+			throws IOException {
+
+		int x = din.readInt();
+		int y = din.readInt();
+		Player p = new Player(new String[] { "sprites/slimes/slime.png",
+				"sprites/slimes/slime2.png", "sprites/slimes/slime3.png",
+				"sprites/slimes/slime4.png"  }, "duped",
+				true, x, y);
+		p.j = din.readInt();
+		p.i = din.readInt();
+		switch (p.i){
+		case 0: p.direction = Direction.DOWN;
+		break;
+		case 1: p.direction = Direction.LEFT;
+		break;
+		case 2: p.direction = Direction.RIGHT;
+		break;
+		case 3: p.direction = Direction.UP;
+		break;
+		}
+		return p;
+	}
+
+	public void toOutputStream(DataOutputStream dout) throws IOException {
+
+		dout.writeInt(getX());
+		dout.writeInt(getY());
+		dout.writeInt(j);
+		dout.writeInt(i);
+
+		/*
+		 * switch(direction){ case UP: dout.writeInt(0); break; case DOWN:
+		 * dout.writeInt(1); break; case LEFT: dout.writeInt(2); break; case
+		 * RIGHT: dout.writeInt(3); break; }
+		 */
+	}
+
+}

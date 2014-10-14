@@ -1,0 +1,237 @@
+package game;
+
+import gui.GameCanvas;
+import gui.GameFrame;
+
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Point;
+import java.awt.image.BufferedImage;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.ArrayList;
+
+import util.ImageLibrary;
+
+public class Player extends Characters implements Serializable {
+	/**
+	 *
+	 */
+	private static final long serialVersionUID = 1L;
+	private ArrayList<Item> inventory = new ArrayList<Item>();
+	public Direction direction;
+	public double transition;
+	public String[] images;
+	private int i = 0;
+	private int j = 0;
+	private boolean up = true;
+	// Health
+	private int health = maxHp;
+	public static final int maxHp = 30;
+	public static final int minHp = 0;
+	// Dead
+	public boolean dead = false;
+	private boolean hit = false;
+	
+	public String[] deathImages = new String[] {
+			"sprites/slimes/slimeGhostFront.png",
+			"sprites/slimes/slimeGhostLeft.png",
+			"sprites/slimes/slimeGhostRight.png",
+			"sprites/slimes/slimeGhostBack.png" };
+
+	public static enum Direction {
+		LEFT, RIGHT, UP, DOWN;
+	}
+
+	public Player(String[] images, String name, boolean isMoveable, int x, int y) {
+		super(images, name, isMoveable, x, y);
+		direction = Direction.LEFT;
+		transition = 0.0;
+		this.images = images;
+	}
+
+	public ArrayList<Item> getInventory() {
+		return inventory;
+	}
+
+	public void printInventory() {
+		/*System.out.println("INVENTORY ---------------------------------------");
+		for (Item items : inventory) {
+			System.out.println(items.toString());
+		}
+		System.out.println("-------------------------------------------------");*/
+	}
+
+	public void addItem(Item i) {
+		inventory.add(i);
+	}
+
+	/**
+	 * Will begin the player movement to another tile.
+	 *
+	 * @param dir
+	 *            the Direction the player is wanting to move in
+	 */
+	@Override
+	public void move(Direction dir) { // TODO needs to be implemented properly
+		direction = dir;
+		switch (dir) {
+		case UP:
+			i = 3;
+			moveUp();
+			break;
+		case DOWN:
+			i = 0;
+			moveDown();
+			break;
+		case LEFT:
+			i = 1;
+			moveLeft();
+			break;
+		case RIGHT:
+			i = 2;
+			moveRight();
+			break;
+		}
+	}
+
+	public void interact() {
+		// interact with items derp derp derp
+	}
+
+	/**
+	 * Updates the players current transition between tiles.
+	 */
+	public void clockTick() {
+		if (up) {
+			j += 1;
+		} else {
+			j -= 1;
+		}
+		if (j > 5) {
+			up = false;
+		}
+		if (j < 1) {
+			up = true;
+		}
+		if (transition == 0.0)
+			return; // the player is not currently moving
+
+		if (transition == 1.0) {
+			transition = 0.0;
+
+			return;
+		}
+		transition += 0.25; // how many steps there are
+	}
+
+	public void draw(Graphics g, int Row, int Col) {
+
+		// while there is no sprites
+		if (images == null) {
+			g.setColor(Color.GREEN);
+			g.fillOval(Row, Col - (int) j, Tile.tileSize, Tile.tileSize);
+		} else {
+			if (dead) {
+				// g.drawString("I'M DEAD!!!! REMOVE ME FROM GAME??", Row, Col);
+				BufferedImage img = ImageLibrary.get(deathImages[i]);
+				g.drawImage(img, Row, Col - (int) j, null);
+			} else {
+				BufferedImage img = ImageLibrary.get(images[i]);
+				// g.drawImage(img, (getX()-Row)*Tile.tileSize,
+				// (getY()-Col)*Tile.tileSize - (int)j, null);
+				g.drawImage(img, Row, Col - (int) j, null);
+				// Health
+				drawHealth(g, Row, Col);
+			}
+		}
+
+	}
+
+	/**
+	 * Draws the players health bar above the player.
+	 *
+	 * @param g
+	 *            - Graphics g
+	 * @param Row
+	 *            - Row the player is at
+	 * @param Col
+	 *            - Column the player is at
+	 */
+	public void drawHealth(Graphics g, int Row, int Col) {
+		if (dead) {
+			return;
+		}
+		int offset = 15;
+		int hpHeight = 5;
+		// Draw health
+		g.setColor(Color.white);
+		g.fillRect(Row, Col - offset, Player.maxHp, hpHeight);
+		g.setColor(Color.green);
+		g.fillRect(Row, Col - offset, health, hpHeight);
+		g.setColor(Color.black);
+		g.drawRect(Row, Col - offset, Player.maxHp - 1, hpHeight);
+	}
+
+	/**
+	 * Returns the players health
+	 *
+	 * @return - Health bar
+	 */
+	public int getHealth() {
+		return health;
+	}
+
+	/**
+	 * Decreases the players health according to the amount entered into
+	 * parameter. health = health - amount;
+	 *
+	 * @param amount
+	 *            - amount to be decreased from health
+	 */
+	public void decreaseHealth(int amount) {
+		if (health <= minHp) {
+			dead = true;
+			return;
+		}
+		this.health -= amount;
+	}
+
+	/**
+	 * returns if you're dead or alive.
+	 * @return	- true if dead, false if alive
+	 */
+	public boolean isDead(){
+		return dead;
+	}
+
+	/**
+	 * When player is dead, sets the player to be alive again,
+	 * with full health as well.
+	 */
+	public void setAlive(){
+		health = maxHp;
+		dead = false;
+	}
+	
+	/**
+	 * Determines if the player has hit an enemy or not.
+	 * @return - true if hit, false if not.
+	 */
+	public boolean isHit(){
+		return hit;
+	}
+	
+	/**
+	 * Sets the hit field which determines whether a player has been 
+	 * hit by a player or not.
+	 * 
+	 * @param trueOrFalse	- true sets hit to true, false sets hit to false.
+	 */
+	public void setHit(boolean trueOrFalse){
+		hit = trueOrFalse;
+	}
+
+}

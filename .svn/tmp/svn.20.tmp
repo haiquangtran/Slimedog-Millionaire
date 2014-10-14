@@ -1,0 +1,145 @@
+package game;
+
+import gui.GameCanvas;
+
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Point;
+import java.awt.image.BufferedImage;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+
+import util.ImageLibrary;
+
+public class Player extends Characters{
+	private ArrayList<Object> inventory = new ArrayList<Object>();
+	public Direction direction;
+	public double transition;
+	public String[] images;
+	private int i = 0;
+
+
+	public static enum Direction {LEFT, RIGHT, UP, DOWN;}
+
+	public Player(String[] image, String name, boolean isMoveable, Tile t) {
+		super(image[0], name, isMoveable,t);
+		direction = Direction.LEFT;
+		transition = 0.0;
+		images = image;
+	}
+
+	//HAI TRAN - FOR TESTING
+	public Player(String image, String name, boolean isMoveable, Tile t){
+		super(image, name, isMoveable, t);
+	}
+
+	public ArrayList<Object> getInventory(){
+		return inventory;
+	}
+
+	/** Will begin the player movement to another tile.
+	 * @param dir the Direction the player is wanting to move in
+	 */
+	@Override
+	public void move(Direction dir) {
+		if(transition != 0.0) return;
+		direction = dir;
+		transition = 0.25;
+	}
+
+	public void interact(){
+		//interact with items derp derp derp
+	}
+
+	/** Updates the players current transition between tiles.
+	 */
+	public void clockTick(){
+		if(transition == 0.0) return; // the player is not currently moving
+		/*if(direction == Direction.LEFT){
+			posX -=Tile.tileSize/4.0;
+		}else if(direction == Direction.RIGHT){
+			posX +=Tile.tileSize/4.0;
+		}else if(direction == Direction.UP){
+			posY -= Tile.tileSize/4.0;
+		}else if(direction == Direction.DOWN){
+			posY += Tile.tileSize/4.0;
+		}*/
+		if(transition == 1.0){
+			transition = 0.0;
+			if(direction ==  Direction.LEFT){
+				pos = GameCanvas.world.getMap()[pos.getRow()-1][pos.getCol()];
+			}
+			if(direction ==  Direction.RIGHT){
+				pos = GameCanvas.world.getMap()[pos.getRow()+1][pos.getCol()];
+			}
+			if(direction ==  Direction.UP){
+				pos = GameCanvas.world.getMap()[pos.getRow()][pos.getCol()-1];
+			}
+			if(direction ==  Direction.DOWN){
+				pos = GameCanvas.world.getMap()[pos.getRow()][pos.getCol()+1];
+			}
+			return;
+		}
+		transition+=0.25; // how many steps there are
+	}
+
+	public void draw(Graphics g){
+
+		// while there is no sprites
+		if(images == null){
+		g.setColor(Color.GREEN);
+		g.fillOval(pos.getPoint().x,pos.getPoint().y-i,Tile.tileSize,Tile.tileSize+i-1);
+		if(i ==0)
+			i=3;
+		else
+			i=0;
+		}
+		else{
+		BufferedImage img = ImageLibrary.get(images[0]);  // this will need to be direction specific
+		g.drawImage(img,pos.getPoint().x,pos.getPoint().y-i,null);
+		//i++;
+		if(i >= images.length){
+			i=0;
+		}
+		}
+	}
+
+
+	public static Player fromInputStream(DataInputStream din) throws IOException {
+		int x = din.readInt();
+		int y = din.readInt();
+		//int dir = din.readInt();
+		Tile t = GameCanvas.world.getMap()[x][y];
+		return new Player(new String[]{"sprites/slime.png"},"duped",true,t);
+	}
+
+
+	public void toOutputStream(DataOutputStream dout) throws IOException {
+		Tile pos = getPos();
+		if(pos != null){
+			dout.writeInt(pos.getPoint().x);
+			dout.writeInt(pos.getPoint().y);
+		}else{
+			dout.writeInt(1);
+			dout.writeInt(1);
+		}
+		/*switch(direction){
+		case UP:
+			dout.writeInt(0);
+			break;
+		case DOWN:
+			dout.writeInt(1);
+			break;
+		case LEFT:
+			dout.writeInt(2);
+			break;
+		case RIGHT:
+			dout.writeInt(3);
+			break;
+		}*/
+	}
+
+
+}

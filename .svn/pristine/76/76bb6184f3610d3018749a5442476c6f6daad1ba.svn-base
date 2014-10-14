@@ -1,0 +1,70 @@
+package game;
+
+import gui.GameCanvas;
+
+import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+
+public class Player extends Characters{
+	private ArrayList<Object> inventory = new ArrayList<Object>();
+	public Tile current;
+	public Tile next;
+	public double transition;
+
+	public static enum Direction {LEFT, RIGHT, UP, DOWN;}
+
+	public Player(String image, String name, boolean isMoveable, Tile pos) {
+		super(image, name, isMoveable);
+		next = null;
+		current = pos;
+		transition = 0.0;
+	}
+
+
+	public ArrayList<Object> getInventory(){
+		return inventory;
+	}
+
+	/** Will begin the player movement to another tile.
+	 * checks if the Direction given is valid and then
+	 * if the movement is valid with the world. e.g the tile is empty.
+	 * @param dir the Direction the player is wanting to move in
+	 */
+	@Override
+	public void move(Direction dir) {
+		if(transition != 0.0) return;  // animation has not finished so cannot change direction
+		int row = current.getRow();
+		int col = current.getCol();
+		if(dir == Direction.LEFT)
+			row--;
+		else if(dir == Direction.RIGHT)
+			row++;
+		else if(dir == Direction.UP)
+			col--;
+		else if(dir == Direction.DOWN)
+			col++;
+		else return;  // no proper direction given so do nothing.
+		//TODO maybe run through a transition of trying to walk into the wall but not going anywhere.
+		
+		//TODO be able to access this ->  Tile tile = GameCanvas.world.map[row][col];
+		Tile tile = new Tile(null,row,col); // just while no get for world map.
+		
+		if(tile == null) return; // cannot move into a tile that does not exist
+		if(tile.getItem() == null) return; // cannot move into tile
+		next = tile;
+		transition+=0.25; // start the transition?		
+	}
+
+	public void interact(){
+		//interact with items derp derp derp
+	}
+	
+	/** Updates the players current transition between tiles.
+	 */
+	public void ping(){
+		if(transition == 0.0) return; // the player is not currently moving
+		transition+=0.25; // how many steps there are
+	}
+	
+	
+}

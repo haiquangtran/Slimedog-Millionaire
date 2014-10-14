@@ -1,0 +1,21 @@
+package game;
+
+import java.io.Serializable;
+
+/**
+ * Abstract class representing items that can be picked up.
+ * @author Jacob Duligall
+ *
+ */
+public abstract class Item extends GameObject implements Serializable {
+
+	/**
+	 *
+	 */
+	private static final long serialVersionUID = 1L;
+
+	public Item(String image, String name, boolean pickUp) {
+		super(image, name, pickUp);
+	}
+
+}

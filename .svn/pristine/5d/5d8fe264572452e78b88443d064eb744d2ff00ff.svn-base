@@ -1,0 +1,111 @@
+package gui;
+
+import game.Game;
+
+import java.awt.Color;
+import java.awt.Toolkit;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.io.IOException;
+
+import javax.swing.JFrame;
+
+import main.Main;
+
+/**
+ * Main class for game, starts the game and contains the main GUI for displaying
+ * the game
+ *
+ * @author Oliver Greenaway
+ *
+ */
+public class GameFrame extends JFrame {
+
+	private static final long serialVersionUID = -75532683488941715L;
+
+	//screen dimensions
+	private static Toolkit tk = Toolkit.getDefaultToolkit();
+	public static final int screenWidth = (int) tk.getScreenSize().getWidth();
+	public static final int screenHeight = (int) tk.getScreenSize().getHeight();
+
+	private final String gameName = "SLIMEDOG MILLIONAIRE";
+
+	public MenuCanvas menuCanvas;
+	public GameCanvas gameCanvas;
+
+	//public Game gameInstance;
+
+	/**
+	 * Creates a new Game as either a server or a client. If started as a server
+	 * a filename must be given to load the server
+	 *
+	 * @param server
+	 *            Whether to run the game as the server
+	 * @param filename
+	 *            The file name for the Server, can be null if running as Client
+	 */
+	public GameFrame(boolean menu) {
+		super();
+		this.setDefaultCloseOperation(EXIT_ON_CLOSE);
+
+		// Set JFrame size to screen width and height
+		this.setTitle(gameName);
+		this.setSize(tk.getScreenSize());
+		this.setResizable(false);
+
+		// Setup menu and game canvas objects
+		menuCanvas = new MenuCanvas(this.getWidth(), this.getHeight(),this);
+		gameCanvas = new GameCanvas(this.getWidth(), this.getHeight(),this);
+
+		// Setup canvas defaults
+		menuCanvas.setBackground(Color.BLACK);
+		gameCanvas.setBackground(Color.WHITE);
+
+		// Set visibility of canvas objects
+		menuCanvas.setVisible(menu);
+		gameCanvas.setVisible(!menu);
+
+		// Add Canvas objects to JFrame
+		this.add(menuCanvas);
+		this.add(gameCanvas);
+		
+		/**
+		 * TESTING - HAI TRAN
+		 */
+		/*this.addKeyListener(gameCanvas);
+		gameCanvas.addKeyListener(gameCanvas);
+		menuCanvas.addKeyListener(gameCanvas);*/
+		gameCanvas.setFocusable(true);
+		
+		this.setVisible(true);
+	}
+
+	/**
+	 * Changes the view to the game and joins the game at the given host with
+	 * the username passed
+	 *
+	 * @param host
+	 *            The host of the server to join
+	 * @param username
+	 *            The username to sign in with
+	 */
+	public void changeToGameState(String host, String username) {
+		menuCanvas.setVisible(false);
+		gameCanvas.setVisible(true);
+		
+		this.dispose();
+		try {
+			Main.runClient(host, this, username.hashCode());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Change to the menu state
+	 */
+	public void changeToMenuState() {
+		menuCanvas.setVisible(true);
+		gameCanvas.setVisible(false);
+	}
+}

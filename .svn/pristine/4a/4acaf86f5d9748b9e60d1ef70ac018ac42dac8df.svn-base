@@ -1,0 +1,15 @@
+package datastorage;
+
+import com.thoughtworks.xstream.XStream;
+import com.thoughtworks.xstream.io.xml.DomDriver;
+
+public class PersonTest {
+	public static void main(String[] args) {
+		Person person = new Person();
+		person.setName("Guilherme");
+		//hello
+		XStream xStream = new XStream(new DomDriver());
+		xStream.alias("person", Person.class);
+		System.out.println(xStream.toXML(person));
+	}
+}

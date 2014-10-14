@@ -1,0 +1,92 @@
+package game;
+
+import java.awt.Color;
+import java.awt.Graphics;
+import java.io.Serializable;
+
+import game.Player.Direction;
+import gui.GameCanvas;
+
+public class NPC extends Characters implements Serializable {
+	/**
+	 *
+	 */
+	private static final long serialVersionUID = 1L;
+	Direction[] path;			// the path the npc will follow. should be cycle
+	Direction direction = Direction.LEFT;
+	double transition = 0.0;
+	int i;
+	int n;
+	private int j = 0;
+
+	public NPC(String image, String name, boolean isMoveable, Tile t, Direction[] p) {
+		super(image, name, isMoveable,t);
+		path = p;
+		n = 1;
+		move(path[0]);
+	}
+
+	@Override
+	public void move(Direction dir) {
+		if(transition != 0.0) return;
+		direction = dir;
+		transition = 0.25;
+
+	}
+
+	public void clockTick(){
+		if(transition == 0.0) return;
+		/*if(direction == Direction.LEFT){
+			posX -=Tile.tileSize/4.0;
+		}else if(direction == Direction.RIGHT){
+			posX +=Tile.tileSize/4.0;
+		}else if(direction == Direction.UP){
+			posY -= Tile.tileSize/4.0;
+		}else {
+			posY += Tile.tileSize/4.0;
+		}*/
+		if(transition == 1.0){
+			transition = 0.0;
+			if(direction ==  Direction.LEFT){
+				pos = GameCanvas.world.getMap()[pos.getRow()-1][pos.getCol()];
+			}
+			if(direction ==  Direction.RIGHT){
+				pos = GameCanvas.world.getMap()[pos.getRow()+1][pos.getCol()];
+			}
+			if(direction ==  Direction.UP){
+				pos = GameCanvas.world.getMap()[pos.getRow()][pos.getCol()-1];
+			}
+			if(direction ==  Direction.DOWN){
+				pos = GameCanvas.world.getMap()[pos.getRow()][pos.getCol()+1];
+			}
+			if(path!= null){
+				move(path[n]);
+				n++;
+				if(n >= path.length){
+					n = 0;
+				}
+			}
+			return;
+		}
+		transition+= 0.25;
+	}
+
+	public void draw(Graphics g){
+		g.setColor(Color.BLUE);
+<<<<<<< .working
+		g.fillOval(getX()*Tile.tileSize,getY()*Tile.tileSize - j,Tile.tileSize,Tile.tileSize);
+
+		if(j>0)
+			j=0;
+		else
+			j=3;
+=======
+		g.fillOval(pos.getPoint().x,pos.getPoint().y-i,Tile.tileSize,Tile.tileSize+i-1);
+		if(i ==0)
+			i=3;
+		else
+			i=0;
+>>>>>>> .merge-right.r91
+	}
+
+}

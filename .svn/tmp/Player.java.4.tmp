@@ -1,0 +1,264 @@
+package game;
+
+import gui.GameCanvas;
+
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Point;
+import java.awt.image.BufferedImage;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.ArrayList;
+
+import util.ImageLibrary;
+
+<<<<<<< .working
+public class Player extends Characters implements Serializable {
+	/**
+	 *
+	 */
+	private static final long serialVersionUID = 1L;
+	private ArrayList<GameObject> inventory = new ArrayList<GameObject>();
+=======
+public class Player extends Characters{
+	private ArrayList<Object> inventory = new ArrayList<Object>();
+>>>>>>> .merge-right.r91
+	public Direction direction;
+	public double transition;
+	public String[] images;
+	private int i = 0;
+	private int j = 0;
+	private boolean up = true;
+
+
+	public static enum Direction {LEFT, RIGHT, UP, DOWN;}
+
+<<<<<<< .working
+	public Player(String[] images, String name, boolean isMoveable, int x, int y) {
+		super(images, name, isMoveable, x, y);
+=======
+	public Player(String[] image, String name, boolean isMoveable, Tile t) {
+		super(image[0], name, isMoveable,t);
+>>>>>>> .merge-right.r91
+		direction = Direction.LEFT;
+		transition = 0.0;
+		images = image;
+	}
+
+	//HAI TRAN - FOR TESTING
+	public Player(String image, String name, boolean isMoveable, Tile t){
+		super(image, name, isMoveable, t);
+	}
+
+<<<<<<< .working
+	public ArrayList<GameObject> getInventory() {
+=======
+	public ArrayList<Object> getInventory(){
+>>>>>>> .merge-right.r91
+		return inventory;
+	}
+
+<<<<<<< .working
+	public void printInventory(){
+		System.out.println("INVENTORY ---------------------------------------");
+		for (GameObject items: inventory){
+			System.out.println(items.toString());
+		}
+		System.out.println("-------------------------------------------------");
+	}
+
+	public void addItem(Item i) {
+		inventory.add(i);
+	}
+
+	/**
+	 * Will begin the player movement to another tile.
+	 *
+	 * @param dir
+	 *            the Direction the player is wanting to move in
+=======
+	/** Will begin the player movement to another tile.
+	 * @param dir the Direction the player is wanting to move in
+>>>>>>> .merge-right.r91
+	 */
+	@Override
+	public void move(Direction dir) {
+		if(transition != 0.0) return;
+		direction = dir;
+		transition = 0.25;
+	}
+
+	public void interact(){
+		//interact with items derp derp derp
+	}
+
+	/** Updates the players current transition between tiles.
+	 */
+<<<<<<< .working
+	public void clockTick() {
+		if (up) {
+			j += 1;
+		} else {
+			j -= 1;
+		}
+		if (j > 5) {
+			up = false;
+		}
+		if (j < 1) {
+			up = true;
+		}
+		if (transition == 0.0)
+			return; // the player is not currently moving
+		/*
+		 * if(direction == Direction.LEFT){ posX -=Tile.tileSize/4.0; }else
+		 * if(direction == Direction.RIGHT){ posX +=Tile.tileSize/4.0; }else
+		 * if(direction == Direction.UP){ posY -= Tile.tileSize/4.0; }else
+		 * if(direction == Direction.DOWN){ posY += Tile.tileSize/4.0; }
+		 */
+		if (transition == 1.0) {
+=======
+	public void clockTick(){
+		if(transition == 0.0) return; // the player is not currently moving
+		/*if(direction == Direction.LEFT){
+			posX -=Tile.tileSize/4.0;
+		}else if(direction == Direction.RIGHT){
+			posX +=Tile.tileSize/4.0;
+		}else if(direction == Direction.UP){
+			posY -= Tile.tileSize/4.0;
+		}else if(direction == Direction.DOWN){
+			posY += Tile.tileSize/4.0;
+		}*/
+		if(transition == 1.0){
+>>>>>>> .merge-right.r91
+			transition = 0.0;
+			if(direction ==  Direction.LEFT){
+				pos = GameCanvas.world.getMap()[pos.getRow()-1][pos.getCol()];
+			}
+			if(direction ==  Direction.RIGHT){
+				pos = GameCanvas.world.getMap()[pos.getRow()+1][pos.getCol()];
+			}
+			if(direction ==  Direction.UP){
+				pos = GameCanvas.world.getMap()[pos.getRow()][pos.getCol()-1];
+			}
+			if(direction ==  Direction.DOWN){
+				pos = GameCanvas.world.getMap()[pos.getRow()][pos.getCol()+1];
+			}
+			return;
+		}
+		transition+=0.25; // how many steps there are
+	}
+
+	public void draw(Graphics g){
+
+		// while there is no sprites
+<<<<<<< .working
+		if (images == null) {
+			g.setColor(Color.GREEN);
+			g.fillOval(GameFrame.screenWidth / 2, GameFrame.screenHeight / 2
+					- (int)j, Tile.tileSize, Tile.tileSize);
+		} else {
+			BufferedImage img = ImageLibrary.get(images[0]);
+			g.drawImage(img, GameFrame.screenWidth / 2 - img.getWidth()+7, GameFrame.screenHeight
+					/ 2 - (int)j - img.getHeight(), null);
+
+			// g.drawImage(img, getX() - (startRow * Tile.tileSize),
+			// tile.getPoint().y - offset - (startCol * Tile.tileSize),
+			// img.getWidth(), img.getHeight(), null);
+			// i++;
+			if (i >= images.length) {
+				i = 0;
+			}
+=======
+		if(images == null){
+		g.setColor(Color.GREEN);
+		g.fillOval(pos.getPoint().x,pos.getPoint().y-i,Tile.tileSize,Tile.tileSize+i-1);
+		if(i ==0)
+			i=3;
+		else
+			i=0;
+		}
+		else{
+		BufferedImage img = ImageLibrary.get(images[0]);  // this will need to be direction specific
+		g.drawImage(img,pos.getPoint().x,pos.getPoint().y-i,null);
+		//i++;
+		if(i >= images.length){
+			i=0;
+		}
+>>>>>>> .merge-right.r91
+		}
+		if (up) {
+			j += 1;
+			//System.out.println(j);
+		} else {
+			j -= 1;
+			//System.out.println(j);
+		}
+		if (j > 5) {
+			up = false;
+		}
+		if (j < 1) {
+			up = true;
+		}
+
+	}
+
+
+	public static Player fromInputStream(DataInputStream din) throws IOException {
+		int x = din.readInt();
+		int y = din.readInt();
+<<<<<<< .working
+		int j = din.readInt();
+		Player p = new Player(new String[] { "sprites/slimes/slime.png" }, "duped",
+				true, x, y);
+		p.j = j;
+		return p;
+=======
+		//int dir = din.readInt();
+		Tile t = GameCanvas.world.getMap()[x][y];
+		return new Player(new String[]{"sprites/slime.png"},"duped",true,t);
+>>>>>>> .merge-right.r91
+	}
+
+
+	public void toOutputStream(DataOutputStream dout) throws IOException {
+<<<<<<< .working
+
+		dout.writeInt(getX());
+		dout.writeInt(getY());
+		dout.writeInt(j);
+
+		/*
+		 * switch(direction){ case UP: dout.writeInt(0); break; case DOWN:
+		 * dout.writeInt(1); break; case LEFT: dout.writeInt(2); break; case
+		 * RIGHT: dout.writeInt(3); break; }
+		 */
+=======
+		Tile pos = getPos();
+		if(pos != null){
+			dout.writeInt(pos.getPoint().x);
+			dout.writeInt(pos.getPoint().y);
+		}else{
+			dout.writeInt(1);
+			dout.writeInt(1);
+		}
+		/*switch(direction){
+		case UP:
+			dout.writeInt(0);
+			break;
+		case DOWN:
+			dout.writeInt(1);
+			break;
+		case LEFT:
+			dout.writeInt(2);
+			break;
+		case RIGHT:
+			dout.writeInt(3);
+			break;
+		}*/
+>>>>>>> .merge-right.r91
+	}
+
+
+}

@@ -1,0 +1,317 @@
+package game;
+
+import game.Player.Direction;
+import gui.GameFrame;
+
+import java.awt.Graphics;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Scanner;
+
+import util.ImageLibrary;
+
+/**
+ * Class that represents the world. Contains a 2d array of gameobjects,
+ * in which could represent keys, doors etc. This class populates the world
+ * and is responsible for redrawing it.
+ *
+ * @author Hai Tran
+ *
+ */
+public class World{
+	private int mapSize = 70;
+	// Map containing all the tiles, which represent the world
+	private Tile[][] map = new Tile[mapSize][mapSize];
+
+	// the top left tile in the screen, so only the tiles on the screen are drawn.
+	private int xPos;
+	private int yPos;
+	private Direction direction;
+	private double transition;
+
+	//Players in the game
+	private ArrayList<Player> players = new ArrayList<Player>();
+
+	//Player position
+	private int playerRow;
+	private int playerCol;
+
+	public void fromByteArray(byte[] array) throws IOException {
+		ByteArrayInputStream bin = new ByteArrayInputStream(array);
+		DataInputStream din = new DataInputStream(bin);
+
+		int ncharacters = din.readInt();
+		players.clear();
+		for(int i=0;i!=ncharacters;++i) {
+			players.add(Player.fromInputStream(din));
+		}
+	}
+
+	public World(){
+		setUpWorld();
+	}
+
+
+	public World(String file) {
+		// TODO Auto-generated constructor stub
+	}
+
+	public byte[] toByteArray() throws IOException {
+		ByteArrayOutputStream bout = new ByteArrayOutputStream();
+		DataOutputStream dout = new DataOutputStream(bout);
+
+		dout.writeInt(players.size());
+		for(Player p : players) {
+			p.toOutputStream(dout);
+		}
+
+		dout.flush();
+
+		// Finally, return!!
+		return bout.toByteArray();
+	}
+
+
+
+	/**
+	 * Sets up the World and all the components in it, such as doors, rooms etc...
+	 */
+	public void setUpWorld(){
+		transition = 0.0;
+		Scanner scan;
+
+		InputStream file = ClassLoader.getSystemResourceAsStream("Assets/Data/file.txt");
+		scan = new Scanner(file);
+
+		for (int i =0; i < map.length; i++){
+			char[] next = scan.next().toCharArray();
+			for (int j =0; j < map[0].length; j++){
+				String img = "";
+				char current = next[j];
+				if(current == 'x')img = "sprites/tree.png";
+				if(current == '-')img = "sprites/grass.png";
+				if(current == 'y')img = "sprites/flower.png";
+				if(current == 'w')img = "sprites/water.png";
+				if(current == 'l')img = "sprites/wall.png";
+				if(current == 'k')img = "sprites/key.png";
+				if(current == 'd')img = "sprites/door.png";
+				if(current == 'f')img = "sprites/floor.png";
+
+				map[i][j] = new Tile(new EnvironmentObject(img,null), i, j);
+			}
+		}
+		scan.close();
+
+
+		//Add Players into world
+		int pos = 30;
+		players.add(new Player("sprites/slimes/slime.png", "sprites/slimes/slime.png", false, new Tile(null, pos, pos)));
+		map[pos][pos] = new Tile(players.get(0),pos,pos);
+		//into specific row and col in world
+	}
+
+
+	public void redraw(Graphics g){
+		//the size of the "game window"
+		int screenWidth = mapSize;
+		int screenHeight = mapSize;
+
+		//FOR CENTER OF SCREEN (offsets from player position)
+		int middleRow = (GameFrame.screenWidth/Tile.tileSize/2);
+		int middleCol = (GameFrame.screenHeight/Tile.tileSize/2);
+		
+		//Get players position in array (PLAYER 1)
+		if (players.get(0).getPos() != null){
+			playerRow = players.get(0).getPos().getRow();
+			playerCol = players.get(0).getPos().getCol();
+		}
+		
+		int startRow = playerRow - middleRow;
+		int startCol = playerCol- middleCol; 
+		int endRow = playerRow + middleRow;
+		int endCol = playerCol + middleCol;
+		//BOUNDS CHECK - when map is made bigger
+		
+		//System.out.println("endRow" + endRow + " endCol:" + endCol);
+		
+		//Draws the map relative to the player (Player in center)
+		for (int i = 0; i < screenWidth; i++){
+			for (int j = 0; j < screenHeight; j++){
+				Tile tile = map[i][j];
+				BufferedImage image = ImageLibrary.get(tile.getItem().getImage());
+				int offset = image.getHeight() - Tile.tileSize;
+				//Translates it onto screen and draws so that drawing is Relative to player (player is in middle)
+				g.drawImage(image, tile.getPoint().x - (startRow*Tile.tileSize), tile.getPoint().y - offset - (startCol*Tile.tileSize),
+						image.getWidth(), image.getHeight(), null);
+			}
+		}
+
+
+		/*	for (int i = xPos; i < screenWidth; i++){
+			for (int j = yPos; j < screenHeight; j++){
+				//Draws all the tiles on the screen
+				if(i < map.length && j < map.length){
+					Tile tile = map[i][j];
+					BufferedImage image = ImageLibrary.get(tile.getItem().getImage());
+					int offset = image.getHeight() - Tile.tileSize;
+					int transOffset = (int)(transition * Tile.tileSize);
+					// increment correct values from transition
+					if(transition == 0.0){
+						g.drawImage(image, tile.getPoint().x, tile.getPoint().y - offset, image.getWidth(), image.getHeight(), null);
+					} else if(direction == Direction.UP){
+						g.drawImage(image, tile.getPoint().x, tile.getPoint().y - offset - transOffset, image.getWidth(), image.getHeight(), null);
+						transition -= 0.5;
+					} else if(direction == Direction.DOWN){
+						g.drawImage(image, tile.getPoint().x, tile.getPoint().y - offset + transOffset, image.getWidth(), image.getHeight(), null);
+						transition -= 0.5;
+					} else if(direction == Direction.LEFT){
+						g.drawImage(image, tile.getPoint().x + transOffset, tile.getPoint().y - offset, image.getWidth(), image.getHeight(), null);
+						transition -= 0.5;
+					} else if(direction == Direction.RIGHT){
+						g.drawImage(image, tile.getPoint().x - transOffset, tile.getPoint().y - offset, image.getWidth(), image.getHeight(), null);
+						transition -= 0.5;
+					}
+				} else {
+					//TODO draw black where the map runs out?
+				}
+			}*/
+		//}
+	}
+
+	/**
+	 * Method that returns the map of tiles
+	 * */
+	public Tile[][] getMap(){
+		return this.map;
+	}
+
+	/**
+	 * method that moves the area displayed on the screen. The player will always be in the middle
+	 * of this area.
+	 * @param dir the direction the player is being moved
+	 */
+	public void move(Direction dir){
+		if(transition != 0.0)return;
+		transition = 0.5;
+		direction = dir;
+	}
+
+	/**
+	 * Dont need to use this - for testing
+	 * moves player 1 in the 2d array
+	 * depending on direction given.
+	 */
+	public void move(String direction){
+		//NEED TO REPLACE ORIGINAL TILE AFTER MOVE
+		if (direction.equals("right")){
+			Player playerTile = (Player) map[playerRow][playerCol].getItem();
+			System.out.println("right");
+			map[playerRow][playerCol] = new Tile(new EnvironmentObject("sprites/grass.png", null), playerRow, playerCol);
+			playerRow++;	//move down
+			map[playerRow][playerCol] = new Tile(playerTile,playerRow,playerCol);
+			players.get(0).setPos(map[playerRow][playerCol]);
+		} 
+		
+		if (direction.equals("left")){
+			Player playerTile = (Player) map[playerRow][playerCol].getItem();
+			System.out.println("left");
+			map[playerRow][playerCol] = new Tile(new EnvironmentObject("sprites/grass.png", null), playerRow, playerCol);
+			playerRow--;	//move up
+			map[playerRow][playerCol] = new Tile(playerTile,playerRow,playerCol);
+			players.get(0).setPos(map[playerRow][playerCol]);
+		} 
+		
+		if (direction.equals("up")){
+			Player playerTile = (Player) map[playerRow][playerCol].getItem();
+			System.out.println("up");
+			map[playerRow][playerCol] = new Tile(new EnvironmentObject("sprites/grass.png", null), playerRow, playerCol);
+			playerCol--;	//left
+			map[playerRow][playerCol] = new Tile(playerTile,playerRow,playerCol);
+			players.get(0).setPos(map[playerRow][playerCol]);
+		} 
+		
+		if (direction.equals("down")){
+			Player playerTile = (Player) map[playerRow][playerCol].getItem();
+			System.out.println("down");
+			map[playerRow][playerCol] = new Tile(new EnvironmentObject("sprites/grass.png", null), playerRow, playerCol);
+			playerCol++;	//right
+			map[playerRow][playerCol] = new Tile(playerTile,playerRow,playerCol);
+			players.get(0).setPos(map[playerRow][playerCol]);
+		} 
+		
+	}
+	
+	
+	public void rotate(){
+
+	}
+
+	/**
+	 * Adds a player to the game and returns a id
+	 * @return
+	 */
+	public int registerPlayer() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	/**
+	 * Called at each game iteration
+	 */
+	public void clockTick() {
+		//System.out.println(transition);
+		if(transition != 0){
+			if(direction == Direction.UP && yPos > 0) yPos--;
+			if(direction == Direction.DOWN && yPos < map[0].length) yPos++;
+			if(direction == Direction.LEFT && xPos > 0) xPos--;
+			if(direction == Direction.RIGHT && xPos < map.length) xPos++;
+
+		}
+		//System.out.println(xPos + " " + yPos);
+
+	}
+
+	/**
+	 * Returns the width of the world
+	 * @return
+	 */
+	public int width() {
+		return mapSize;
+	}
+
+	/**
+	 * Returns the height of the world
+	 * @return
+	 */
+	public int height() {
+		return mapSize;
+	}
+
+	/**
+	 * Returns the player with the matching id
+	 * @param uid
+	 * @return
+	 */
+	public Player player(int uid) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	/**
+	 * Remove the player with the corresponding id from the game
+	 * @param uid
+	 */
+	public void disconnectPlayer(int uid) {
+		// TODO Auto-generated method stub
+
+	}
+
+}

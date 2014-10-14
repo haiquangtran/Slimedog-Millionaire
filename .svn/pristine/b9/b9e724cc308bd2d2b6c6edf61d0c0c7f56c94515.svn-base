@@ -1,0 +1,122 @@
+package networking;
+
+import game.Player.Direction;
+import game.World;
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * A master connection receives events from a slave connection via a socket.
+ * These events are registered with the world. The master connection is also
+ * responsible for transmitting information to the slave about the current world
+ * state.
+ * 
+ * @author Oliver Greenaway
+ */
+public final class Master extends Thread {
+	private final World board;
+	private final int broadcastClock;
+	private List<Socket> sockets = new ArrayList<Socket>();
+	private Object syncKey = new Object();
+
+	/**
+	 * Constructs a master on the server, takes input from slaves and changes
+	 * the global world
+	 * 
+	 * @param broadcastClock
+	 * @param board
+	 */
+	public Master(int broadcastClock, World game) {
+		this.board = game;
+		this.broadcastClock = broadcastClock;
+	}
+
+	/**
+	 * Executes the master loop. Retrieves input from slaves and changes the
+	 * world state.
+	 */
+	public void run() {
+		try {
+
+			boolean exit = false;
+			while (!exit) {
+				try {
+					synchronized (syncKey) {
+						for (Socket s : sockets) {
+							DataInputStream input = new DataInputStream(s.getInputStream());
+							if (input.available() != 0) {
+								// read direction event from client.
+								int uid = input.readInt();
+								int dir = input.readInt();
+								switch (dir) {
+								case 1:
+									board.move(Direction.UP, uid);
+									break;
+								case 2:
+									board.move(Direction.DOWN, uid);
+									break;
+								case 3:
+									board.move(Direction.RIGHT, uid);
+									break;
+								case 4:
+									board.move(Direction.LEFT, uid);
+									break;
+								}
+								for(Socket out : sockets){
+									DataOutputStream output = new DataOutputStream(out.getOutputStream());
+									output.writeInt(uid);
+									output.writeInt(dir);
+									output.flush();
+								}
+							}
+						}
+					}
+					Thread.sleep(broadcastClock);
+				} catch (InterruptedException e) {
+				}
+			}
+			for (Socket s : sockets) {
+				s.close();
+			}
+		} catch (IOException e) {
+		}
+	}
+
+	public void addSocket(Socket socket) {
+		synchronized (syncKey) {
+			sockets.add(socket);
+			try {
+				ObjectOutputStream output = new ObjectOutputStream(
+						socket.getOutputStream());
+				DataInputStream in = new DataInputStream(socket.getInputStream());
+				int uid = in.readInt();
+				output.writeObject(board);
+				output.flush();
+				output.writeInt(board.getPlayers().size());
+				for(Integer i : board.getPlayers().keySet()){
+					output.writeInt(i);
+					output.writeInt(board.getPlayers().get(i).getX());
+					output.writeInt(board.getPlayers().get(i).getY());
+				}
+				output.flush();
+				board.registerPlayer(uid);
+				for(Socket s : sockets){
+					if(s != socket){
+						DataOutputStream out = new DataOutputStream(s.getOutputStream());
+						out.writeInt(-1);
+						out.writeInt(uid);
+						out.flush();
+					}
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+}

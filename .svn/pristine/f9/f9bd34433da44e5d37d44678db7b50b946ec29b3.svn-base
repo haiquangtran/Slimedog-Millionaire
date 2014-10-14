@@ -1,0 +1,12 @@
+package game;
+
+/** Immovable scenery objects.
+ * @author Marcel Blokker
+ *
+ */
+public class EnvironmentObject extends GameObject {
+	
+	public EnvironmentObject(String i, String n) {
+		super(i, n, false);
+		}
+}

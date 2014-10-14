@@ -1,0 +1,20 @@
+package game;
+
+public class Game {
+
+	public Game(){
+		//TODO creates a new game
+	}
+
+
+	public Game(String loadFile) {
+		// TODO loads a previous game from file
+	}
+
+
+	public int addPlayer() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+}

@@ -1,0 +1,126 @@
+package gui;
+
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.image.BufferedImage;
+
+import javax.swing.InputMap;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollBar;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.KeyStroke;
+
+import util.ImageLibrary;
+
+import game.Player;
+import game.Tile;
+import game.World;
+
+/**
+ * The display for the game part of the game Client
+ * @author Oliver Greenaway
+ *
+ */
+public class GameCanvas extends Canvas /*implements KeyListener*/{
+
+	private static final long serialVersionUID = -2241158400287323322L;
+
+	public static final World world = new World();		//Game world containing the 2d array
+	private GameFrame parent;
+
+	/**
+	 * Constructs a new GameCanvas with the given width and height
+	 * @param width The Width of the canvas
+	 * @param height The Height of the canvas
+	 */
+	public GameCanvas(int width, int height, GameFrame parent) {
+		super(width, height);
+		this.parent = parent;
+	}
+
+	/**
+	 * Draws everything in the world.
+	 */
+	@Override
+	public void paint(Graphics g){
+		world.redraw(g);	
+		//displayPanel(g);
+	}
+
+	public void displayPanel(Graphics g){
+		int panelSize = 200;
+		int chatSize = 130;
+		
+		//Components
+		JPanel displayPanel = new JPanel();
+		JTextArea chatArea = new JTextArea(chatSize,chatSize);
+		JScrollPane chat = new JScrollPane(chatArea);
+
+		//Add components
+		this.add(displayPanel);
+		displayPanel.add(chat);	
+		
+		//Appearance
+		displayPanel.setBackground(Color.DARK_GRAY);
+		chat.setBackground(Color.gray);
+
+		//Set up positions
+		this.setLayout(null);
+		displayPanel.setPreferredSize(new Dimension(GameFrame.screenWidth, panelSize));
+		chat.setPreferredSize(new Dimension(chatSize * 5, chatSize));
+		Dimension size = displayPanel.getPreferredSize();
+		displayPanel.setBounds(0,GameFrame.screenHeight - panelSize, (int)size.getWidth(), (int)size.getHeight());
+		size = chat.getPreferredSize();
+		chat.setBounds(10,10, (int)size.getWidth(), (int)size.getHeight());
+
+		//Editable
+		chatArea.setEditable(false);
+		chat.setVerticalScrollBar(new JScrollBar(1));
+		
+		
+		//Display the panel
+		displayPanel.repaint();
+	}
+
+	/**
+	 * TESTING - HAI TRAN
+	 * 
+	 * 
+	 * 
+	 * 
+	 */
+	/*@Override
+	public void keyPressed(KeyEvent e) {
+		int code = e.getKeyCode();
+		if (code == KeyEvent.VK_RIGHT || code == KeyEvent.VK_KP_RIGHT) {
+			world.move("right");
+		} else if (code == KeyEvent.VK_LEFT || code == KeyEvent.VK_KP_LEFT) {
+			world.move("left");
+		} else if (code == KeyEvent.VK_UP) {
+			world.move("up");
+		} else if (code == KeyEvent.VK_DOWN) {
+			world.move("down");
+		}
+		
+		this.repaint();
+	}
+
+	@Override
+	public void keyReleased(KeyEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void keyTyped(KeyEvent e) {
+		// TODO Auto-generated method stub
+		
+	}*/
+
+
+}

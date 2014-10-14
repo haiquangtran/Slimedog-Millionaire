@@ -1,0 +1,126 @@
+package game;
+
+import java.awt.Color;
+import java.awt.Graphics;
+import java.io.Serializable;
+
+import util.ImageLibrary;
+
+import game.Player.Direction;
+import gui.GameCanvas;
+
+public class NPC extends Characters implements Serializable {
+	/**
+	 *
+	 */
+	private static final long serialVersionUID = 1L;
+	Direction[] path;			// the path the npc will follow. should be cycle
+	Direction direction = Direction.LEFT;
+	double transition = 0.0;
+	public String[] images;
+	double x,y;
+	int i = 0;
+	int n;
+	private int j = 0;
+	private boolean up;
+
+	public NPC(String[] image, String name, boolean isMoveable, int x, int y, Direction[] p) {
+		super(image, name, isMoveable,x,y);
+		images=image;
+		path = p;
+		n = 1;
+		this.x = x;
+		this.y =y;
+		if(p != null){
+			move(path[0]);
+		}
+	}
+
+	@Override
+	public void move(Direction dir) { // TODO needs to be implemented properly
+		transition = 0.1;
+		x=getX();
+		y=getY();
+		direction = dir;
+		switch (dir) {
+		case UP:
+			i=3;
+			moveUp();
+			break;
+		case DOWN:
+			i=0;
+			moveDown();
+			break;
+		case LEFT:
+			i=1;
+			moveLeft();
+			break;
+		case RIGHT:
+			i=2;
+			moveRight();
+			break;
+		}
+	}
+
+	public void clockTick(){
+
+		if (up) {
+			j += 1;
+		} else {
+			j -= 1;
+		}
+		if (j > 4) {
+			up = false;
+		}
+		if (j < 1) {
+			up = true;
+		}
+		
+		
+		if(transition == 0.0) return;
+		/*if(direction == Direction.LEFT){
+			posX -=Tile.tileSize/4.0;
+		}else if(direction == Direction.RIGHT){
+			posX +=Tile.tileSize/4.0;
+		}else if(direction == Direction.UP){
+			posY -= Tile.tileSize/4.0;
+		}else {
+			posY += Tile.tileSize/4.0;
+		}*/
+		if(transition >= 1.0){
+			transition = 0.0;
+			if(path!= null){
+				move(path[n]);
+				n++;
+				if(n >= path.length){
+					n = 0;
+				}
+			}
+			return;
+		}
+		switch (direction) {
+		case UP:
+			y-= 0.1;
+			break;
+		case DOWN:
+			y+= 0.1;
+			break;
+		case LEFT:
+			x-= 0.1;
+			break;
+		case RIGHT:
+			x+= 0.1;
+			break;
+		}
+		
+		transition+= 0.1;
+	}
+
+	public void draw(Graphics g, int startRow, int startCol){
+		g.setColor(Color.BLUE);
+		g.drawImage(ImageLibrary.get(images[i]), (int)((x-startRow)*Tile.tileSize),(int)((y-startCol)*Tile.tileSize) - j,Tile.tileSize,Tile.tileSize,null);
+
+		
+	}
+
+}

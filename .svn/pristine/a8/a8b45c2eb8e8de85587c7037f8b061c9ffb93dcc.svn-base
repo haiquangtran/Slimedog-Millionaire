@@ -1,0 +1,13 @@
+package game;
+/**
+ * Abstract class representing items that can be picked up.
+ * @author Jacob Duligall
+ *
+ */
+public abstract class Item extends GameObject {
+	
+	public Item(String image, String name, boolean pickUp) {
+		super(image, name, pickUp);
+	}
+
+}

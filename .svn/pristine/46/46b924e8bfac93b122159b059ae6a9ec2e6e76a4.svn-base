@@ -1,0 +1,65 @@
+package game;
+
+import game.Player.Direction;
+
+import java.io.Serializable;
+
+public abstract class Characters implements Serializable {
+
+	/**
+	 *
+	 */
+	private static final long serialVersionUID = 1L;
+	private int x, y;
+
+	public Characters(String[] images, String name, boolean isMoveable, int x,
+			int y) {
+		this.x = x;
+		this.y = y;
+	}
+
+	public abstract void move(Direction dir);
+
+	public boolean collision(Characters other) {
+		/*
+		 * if(this.posX < other.posX+Tile.tileSize && this.posX >= other.posX){
+		 * if(this.posY < other.posY+Tile.tileSize && this.posY >= other.posY){
+		 * return true; } } if(other.posX < this.posX+Tile.tileSize &&
+		 * other.posX >= this.posX){ if(other.posY < this.posY+Tile.tileSize &&
+		 * other.posY >= this.posY){ return true; } }
+		 */
+		return false;
+	}
+
+	public int getX() {
+		return x;
+	}
+
+	public int getY() {
+		return y;
+	}
+
+	public void moveRight() {
+		if (x < World.mapSize-1){
+			x++;
+		}
+	}
+
+	public void moveLeft() {
+		if (x > 0){
+			x--;
+		}
+	}
+
+	public void moveUp() {
+		if (y > 0){
+			y--;
+		}
+	}
+
+	public void moveDown() {
+		if (y < World.mapSize-1){
+			y++;
+		}
+	}
+}

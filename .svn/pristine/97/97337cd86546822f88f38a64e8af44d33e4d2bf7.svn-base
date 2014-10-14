@@ -1,0 +1,53 @@
+package networking;
+
+import game.Game;
+
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
+
+public class Server {
+
+	private final int port = 32768;
+	private Game game;
+	private int clientCount = 0;
+
+	public Server() {
+		try {
+			game = new Game();
+			ServerSocket ss = new ServerSocket(port);
+			System.out.println("Server started on "+ss.getLocalSocketAddress());
+			while (true) {
+				if (clientCount <= 5) {
+					Socket s = ss.accept();
+					System.out.println("ACCEPTED CONNECTION FROM: "
+							+ s.getInetAddress());
+					int uid = game.addPlayer();
+					clientCount++;
+				}
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public Server(String loadFile) {
+		try {
+			game = new Game(loadFile);
+			ServerSocket ss = new ServerSocket(port);
+			System.out.println("Server started on "+ss.getLocalSocketAddress());
+			while (true) {
+				if (clientCount <= 5) {
+					Socket s = ss.accept();
+					System.out.println("ACCEPTED CONNECTION FROM: "
+							+ s.getInetAddress());
+					int uid = game.addPlayer();
+					clientCount++;
+				}
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+}

@@ -1,0 +1,28 @@
+package game;
+
+import java.io.Serializable;
+
+public class Game implements Serializable {
+
+	/**
+	 *
+	 */
+	private static final long serialVersionUID = 1L;
+
+
+	public Game(){
+		//TODO creates a new game
+	}
+
+
+	public Game(String loadFile) {
+		// TODO loads a previous game from file
+	}
+
+
+	public int addPlayer() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+}

@@ -1,0 +1,157 @@
+package networking;
+
+import game.World;
+import gui.GameCanvas;
+import gui.GameFrame;
+
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
+
+/**
+ * A slave connection receives information about the current state of the world
+ * and relays that into the local copy of the world. The slave connection also
+ * notifies the master connection of key presses by the player.
+ */
+public final class Slave extends Thread implements KeyListener {
+	private final Socket socket;
+	private ObjectOutputStream output;
+	private ObjectInputStream input;
+	private int uid;
+	private int totalSent;
+	private GameFrame display;
+
+	/**
+	 * Construct a slave connection from a socket. A slave connection does no
+	 * local computation, other than to display the current state of the world;
+	 * instead, logic is controlled entirely by the server, and the slave
+	 * display is only refreshed when data is received from the master
+	 * connection.
+	 *
+	 * @param socket
+	 * @param display
+	 * @param uid
+	 */
+	public Slave(Socket socket, int uid) {
+		System.out.println(uid);
+		this.socket = socket;
+		this.display = new GameFrame(false);
+		this.display.gameCanvas.addKeyListener(this);
+		this.uid = uid;
+	}
+
+	/**
+	 * Runs the slave updating the players view of the game on server state
+	 * change
+	 */
+	public void run() {
+		try {
+			output = new ObjectOutputStream(socket.getOutputStream());
+			input = new ObjectInputStream(socket.getInputStream());
+
+			try {
+				GameCanvas.world = (World)input.readObject();
+			} catch (ClassNotFoundException e1) {
+				e1.printStackTrace();
+			}
+			System.out.println("CLIENT UID: " + uid);
+			System.out.println("CLIENT WORLD DIMENSIONS: 70 x 70");
+			boolean exit = false;
+			long totalRec = 0;
+			display.repaint();
+			int clock = 0;
+			while (!exit) {
+				// read event
+				int amount = input.available();
+				totalRec += amount;
+				try {
+					GameCanvas.world = (World)input.readObject();
+					//System.out.println(GameCanvas.world.player(0).getY());
+				} catch (ClassNotFoundException e) {
+					e.printStackTrace();
+				}
+				display.repaint();
+				// print out some useful information about the amount of data
+				// sent and received
+				System.out.print("\rREC: " + (totalRec / 1024) + "KB ("
+						+ (rate(amount) / 1024) + "KB/s) TX: " + totalSent
+						+ " Bytes");
+			}
+			socket.close(); // release socket
+		} catch (IOException e) {
+			System.err.println("I/O Error: " + e.getMessage());
+			e.printStackTrace(System.err);
+		}
+	}
+
+	/**
+	 * The following method calculates the rate of data received in bytes/s.
+	 *
+	 * @param amount
+	 * @return
+	 */
+	private int rate(int amount) {
+		rateTotal += amount;
+		long time = System.currentTimeMillis();
+		long period = time - rateStart;
+		if (period > 1000) {
+			// more than a second since last calculation
+			currentRate = (rateTotal * 1000) / (int) period;
+			rateStart = time;
+			rateTotal = 0;
+		}
+
+		return currentRate;
+	}
+
+	private int rateTotal = 0; // total accumulated this second
+	private int currentRate = 0; // rate of reception last second
+	private long rateStart = System.currentTimeMillis(); // start of this
+															// accumulation
+															// perioud
+
+	// The following intercept keyboard events from the user.
+
+	@Override
+	public void keyPressed(KeyEvent e) {
+		try {
+			int code = e.getKeyCode();
+			if (code == KeyEvent.VK_RIGHT || code == KeyEvent.VK_KP_RIGHT) {
+				output.writeInt(uid);
+				output.writeInt(3);
+				totalSent += 4;
+			} else if (code == KeyEvent.VK_LEFT || code == KeyEvent.VK_KP_LEFT) {
+				output.writeInt(uid);
+				output.writeInt(4);
+				totalSent += 4;
+			} else if (code == KeyEvent.VK_UP || code == KeyEvent.VK_KP_UP) {
+				output.writeInt(uid);
+				output.writeInt(1);
+				totalSent += 4;
+			} else if (code == KeyEvent.VK_DOWN || code == KeyEvent.VK_KP_DOWN) {
+				output.writeInt(uid);
+				output.writeInt(2);
+				totalSent += 4;
+			}
+			output.flush();
+		} catch (IOException ioe) {
+			ioe.printStackTrace();
+			// something went wrong trying to communicate the key press to the
+			// server. So, we just ignore it.
+		}
+	}
+
+	@Override
+	public void keyReleased(KeyEvent e) {
+	}
+
+	@Override
+	public void keyTyped(KeyEvent e) {
+
+	}
+
+}

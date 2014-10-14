@@ -1,0 +1,36 @@
+package gui;
+
+import java.awt.Graphics;
+
+import game.World;
+
+/**
+ * The display for the game part of the game Client
+ * @author Oliver Greenaway
+ *
+ */
+public class GameCanvas extends Canvas {
+
+	private static final long serialVersionUID = -2241158400287323322L;
+
+	public static final World world = new World();		//Game world containing the 2d array
+
+	/**
+	 * Constructs a new GameCanvas with the given width and height
+	 * @param width The Width of the canvas
+	 * @param height The Height of the canvas
+	 */
+	public GameCanvas(int width, int height) {
+		super(width, height);
+		// TODO Auto-generated constructor stub
+	}
+
+	/**
+	 * Draws everything in the world.
+	 */
+	@Override
+	public void paint(Graphics g){
+		world.redraw(g);	
+	}
+
+}

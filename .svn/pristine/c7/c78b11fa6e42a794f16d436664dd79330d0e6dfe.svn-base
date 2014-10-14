@@ -1,0 +1,109 @@
+package game;
+
+import game.Player.Direction;
+
+/**
+ * Moveable object - Boulder. Boulders can be pushed.
+ * 
+ * @author Quang Tran
+ * 
+ */
+public class Boulder extends GameObject {
+
+	private static final long serialVersionUID = 58462727301728163L;
+
+	/**
+	 * Creates a new Boulder with the given Image, Name and if it is possible to
+	 * pick up
+	 * 
+	 * @param image
+	 *            Boulder Image
+	 * @param name
+	 *            Boulder Name
+	 * @param pickUp
+	 *            Can be picked up
+	 */
+	public Boulder(String image, String name, boolean pickUp) {
+		super(image, name, false);
+	}
+
+	/**
+	 * Allows a player to move boulders in a certain direction.
+	 * 
+	 * @param dir
+	 *            - direction player will move
+	 * @param uid
+	 *            - player identification
+	 * @param world
+	 *            - World containing the Boulder
+	 */
+	public void move(Direction dir, int uid, World world) {
+		// Checks 2 spaces ahead and moves the boulder if valid
+		if (!world.checkTile(dir, uid, 2).getItem().getName()
+				.equals(World.water)
+				&& !world.checkTile(dir, uid, 2).getItem().getName()
+						.equals(World.tree)
+				&& !world.checkTile(dir, uid, 2).getItem().getName()
+						.equals(World.wall)
+				&& !world.checkTile(dir, uid, 2).getItem().getName()
+						.equals(World.boulder)
+				&& !world.checkTile(dir, uid, 2).getItem().getName()
+						.equals(World.lockedchest)
+				&& !world.checkTile(dir, uid, 2).getItem().getName()
+						.equals(World.door)
+				&& !world.checkTile(dir, uid, 2).getItem().getName()
+						.equals(World.boat)
+				&& !world.checkTile(dir, uid, 2).getItem().getName()
+						.equals(World.reviver)
+				&& !world.checkTile(dir, uid, 2).getItem().getName()
+						.equals(World.sign)) {
+
+			world.replaceTile(dir, uid, "sprites/grass.png", World.grass, 1);
+
+			move(dir, uid, world, 2); // move boulder 2 spaces
+		}
+		// otherwise checks if boulder can be moved 1 space ahead instead
+		else if (world.checkTile(dir, uid, 1).getItem().getName()
+				.equals(World.grass)
+				|| world.checkTile(dir, uid, 1).getItem().getName()
+						.equals(World.flower)) {
+			move(dir, uid, world, 1);
+		}
+
+	}
+
+	/**
+	 * Moves the boulder in a given direction by the specified distance
+	 * 
+	 * @param dir
+	 *            Direction of movement
+	 * @param uid
+	 *            ID of player moving
+	 * @param world
+	 *            World containing Boulder
+	 * @param distance
+	 *            Distance to move
+	 */
+	public void move(Direction dir, int uid, World world, int distance) {
+		Player p = world.getPlayers().get(uid);
+		int pRow = p.getX();
+		int pCol = p.getY();
+		if (dir == Direction.DOWN && pCol + distance < World.mapSize
+				&& pCol + distance >= 0) {
+			world.getMap()[pRow][pCol + distance].setItem(new Boulder(
+					"sprites/boulder.png", World.boulder, false));
+		} else if (dir == Direction.UP && pCol - distance < World.mapSize
+				&& pCol - distance >= 0) {
+			world.getMap()[pRow][pCol - distance].setItem(new Boulder(
+					"sprites/boulder.png", World.boulder, false));
+		} else if (dir == Direction.RIGHT && pRow + distance < World.mapSize
+				&& pRow + distance >= 0) {
+			world.getMap()[pRow + distance][pCol].setItem(new Boulder(
+					"sprites/boulder.png", World.boulder, false));
+		} else if (dir == Direction.LEFT && pRow - distance < World.mapSize
+				&& pRow - distance >= 0) {
+			world.getMap()[pRow - distance][pCol].setItem(new Boulder(
+					"sprites/boulder.png", World.boulder, false));
+		}
+	}
+}

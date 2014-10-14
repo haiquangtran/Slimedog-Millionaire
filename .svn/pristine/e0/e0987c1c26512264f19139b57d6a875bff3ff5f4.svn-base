@@ -1,0 +1,82 @@
+package game;
+
+import java.awt.Graphics;
+import java.awt.image.BufferedImage;
+
+import datastorage.StoreData;
+
+import util.ImageLibrary;
+
+/**
+ * Class that represents the world. Contains a 2d array of gameobjects,
+ * in which could represent keys, doors etc. This class populates the world
+ * and is responsible for redrawing it.
+ *
+ * @author Hai Tran
+ *
+ */
+public class World {
+	private int mapSize = 70;
+	// Map containing all the tiles, which represent the world
+	private Tile[][] map = new Tile[mapSize][mapSize];
+
+
+	public static void fromByteArray(byte[] array) {
+
+	}
+
+	public World(){
+		setUpWorld();
+	}
+
+
+	public static byte[] toByteArray() {
+		return new byte[10];
+	}
+
+
+
+	/**
+	 * Sets up the World and all the components in it, such as doors, rooms etc...
+	 */
+	public void setUpWorld(){
+		for (int i =0; i < map.length; i++){
+			for (int j =0; j < map[0].length; j++){
+				map[i][j] = new Tile(new Key("sprites/grass.png",null,false), i, j);
+			}
+
+		}
+
+	}
+
+
+	public void redraw(Graphics g){
+		//Instead of redrawing all tiles could recognize where player has interacted and only change that tile for efficiency?
+		for (int i =0; i < map.length; i++){
+			for (int j =0; j < map[0].length; j++){
+				//Draws all the tiles on the screen
+				Tile tile = map[i][j];
+				BufferedImage image = ImageLibrary.get(tile.getItem().getImage());
+				int offset = image.getHeight() - Tile.tileSize;
+				g.drawImage(image, tile.getPoint().x, tile.getPoint().y - offset, image.getWidth(), image.getHeight(), null);
+			}
+		}
+
+		//HAVE TO draw over top of array in order to remove black background
+		Tile tile = map[29][25];
+		BufferedImage image = ImageLibrary.get("Menu/tree.png");
+		int offset = image.getHeight() - Tile.tileSize;
+		g.drawImage(image, tile.getPoint().x, tile.getPoint().y - offset, image.getWidth(), image.getHeight(), null);
+	}
+	/**
+	 * Method that returns the map of tiles
+	 * */
+	public Tile[][] getMap(){
+		return this.map;
+	}
+
+
+	public void rotate(){
+
+	}
+}

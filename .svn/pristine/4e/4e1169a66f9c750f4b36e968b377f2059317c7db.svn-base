@@ -1,0 +1,26 @@
+package game;
+
+import java.util.ArrayList;
+
+/** An environment object that can hold items inside
+ * somewhat like the players inventory.
+ * @author Celdamar
+ */
+public class Container extends EnvironmentObject{
+	
+	private ArrayList<Item> items;
+	
+	public Container(String image, String name, ArrayList<Item> i) {
+		super(image, name);
+		if(items == null){
+			items = new ArrayList<Item>();
+		}else{
+		items = i;
+		}
+	}
+	
+	public ArrayList<Item> getItems(){
+		return items;
+	}
+
+}

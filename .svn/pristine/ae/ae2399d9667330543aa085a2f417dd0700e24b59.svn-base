@@ -1,0 +1,24 @@
+package networking;
+
+import datastorage.StoreData;
+import game.World;
+
+public class SaveThread extends Thread {
+	private World world;
+	public SaveThread(World world){
+		this.world = world;
+	}
+
+
+
+	@Override
+	public void run(){
+		long time = System.currentTimeMillis();
+		while(true){
+			if((System.currentTimeMillis() - time) > 30000){
+				time = System.currentTimeMillis();
+				StoreData.saveGameState(world);
+			}
+		}
+	}
+}

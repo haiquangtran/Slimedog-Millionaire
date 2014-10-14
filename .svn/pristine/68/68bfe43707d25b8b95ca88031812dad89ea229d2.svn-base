@@ -1,0 +1,55 @@
+package networking;
+
+import game.World;
+import game.Player.Direction;
+
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+
+/**
+ *
+ * The controller listens for input in the client and adjusts the players
+ * position on the world at a local level
+ *
+ * @author Oliver Greenaway
+ *
+ */
+public class Controller implements KeyListener {
+	private final World game;
+	private final int uid;
+
+	/**
+	 * Creates a new controller
+	 * @param uid
+	 * @param game
+	 */
+	public Controller(int uid, World game) {
+		this.game = game;
+		this.uid = uid;
+	}
+
+	// The following intercept keyboard events from the user.
+
+	@Override
+	public void keyPressed(KeyEvent e) {
+		int code = e.getKeyCode();
+		if (code == KeyEvent.VK_RIGHT || code == KeyEvent.VK_KP_RIGHT) {
+			game.player(uid).move(Direction.RIGHT);
+		} else if (code == KeyEvent.VK_LEFT || code == KeyEvent.VK_KP_LEFT) {
+			game.player(uid).move(Direction.LEFT);
+		} else if (code == KeyEvent.VK_UP) {
+			game.player(uid).move(Direction.UP);
+		} else if (code == KeyEvent.VK_DOWN) {
+			game.player(uid).move(Direction.UP);
+		}
+	}
+
+	@Override
+	public void keyReleased(KeyEvent e) {
+	}
+
+	@Override
+	public void keyTyped(KeyEvent e) {
+
+	}
+}

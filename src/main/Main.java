@@ -1,0 +1,192 @@
+package main;
+
+import game.World;
+import gui.GameFrame;
+
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.net.UnknownHostException;
+
+import networking.GameClock;
+import networking.Master;
+import networking.Slave;
+import datastorage.StoreData;
+
+/**
+ * Main class handles command input by checking arguments for which instance of
+ * the game should be launched
+ * 
+ * @author Oliver Greenaway
+ * 
+ */
+public class Main {
+
+	public static void main(String[] args) {
+		// Ensures arguments exist
+		if (args.length < 1) {
+			System.out
+					.println("Arguments missing\nFor Client: -client\nFor Server: -server [load filename]\n");
+			// Checks for Client option
+		} else if (args[0].equalsIgnoreCase("-client")) {
+			// Ensures -client is not followed by any more arguments
+			if (args.length == 1) {
+				// Starts Game as Client
+				new GameFrame(true);
+			} else {
+				System.out.println("No arguments required after -client\n");
+			}
+			// Checks for Server option
+		} else if (args[0].equalsIgnoreCase("-server")) {
+			// Ensures -server is followed by one and only one argument
+			if (args.length >= 1 && args.length < 3) {
+				// If no loadFile is given then create a new server game
+				if (args.length == 1) {
+					runServer();
+				}
+				// Ensures the filename is followed by the file type .xml
+				else if (args[1].endsWith(".xml")) {
+					// Starts Game as Server
+					System.out.println("Loaded from file");
+					runServerFromFile(args[1]);
+				} else {
+					System.out.println("Expected .xml file as load file\n");
+				}
+			} else {
+				System.out
+						.println("Invalid Arguments follow -server, -server [filename]\n");
+			}
+			// Catches invalid Arguments
+		} else {
+			System.out
+					.println("Invalid Arguments\nFor Client: -client\nFor Server: -server [load filename]\n");
+		}
+	}
+
+	/**
+	 * Runs the server, with a world opened from a saved instance on file
+	 * 
+	 * @param file
+	 *            File containing Saved World instance
+	 */
+	private static void runServerFromFile(String file) {
+		try {
+			FileInputStream fileIn = new FileInputStream(new File("file.xml"));
+			World game = StoreData.loadGameState(fileIn);
+			GameClock clk = new GameClock(20, game, null);
+
+			// Listen for connections
+			System.out.println("SERVER LISTENING ON PORT 4443");
+			try {
+				Master master = new Master(5, game);
+				master.start();
+				// Now, we await connections.
+				ServerSocket ss = new ServerSocket(4443);
+				boolean running = true;
+				while (running) {
+					// Wait for a socket
+					Socket s = ss.accept();
+					System.out.println("ACCEPTED CONNECTION FROM: "
+							+ s.getInetAddress());
+					master.addSocket(s);
+					startGame(clk, game, master);
+				}
+				ss.close();
+			} catch (IOException e) {
+				System.err.println("I/O error: " + e.getMessage());
+			}
+		} catch (FileNotFoundException e1) {
+			e1.printStackTrace();
+		}
+
+	}
+
+	/**
+	 * Runs the server, creating a new World
+	 */
+	private static void runServer() {
+		World game = new World();
+		GameClock clk = new GameClock(20, game, null);
+		boolean first = true;
+
+		// Listen for connections
+		System.out.println("SERVER LISTENING ON PORT 4443");
+		try {
+			Master master = new Master(5, game);
+			master.start();
+			// Now, we await connections.
+			ServerSocket ss = new ServerSocket(4443);
+			boolean running = true;
+			while (running) {
+				// Wait for a socket
+				Socket s = ss.accept();
+				System.out.println("ACCEPTED CONNECTION FROM: "
+						+ s.getInetAddress());
+				master.addSocket(s);
+				if (first) {
+					clk.start();
+					first = false;
+				}
+			}
+			ss.close();
+		} catch (IOException e) {
+			System.err.println("I/O error: " + e.getMessage());
+		}
+	}
+
+	/**
+	 * The following method controls a multi-user game. When a given game is
+	 * over, it will simply restart the game with whatever players are
+	 * remaining. However, if all players have disconnected then it will stop.
+	 * 
+	 * @param clk
+	 *            GameClock for the game
+	 * @param game
+	 *            World object
+	 * @param connection
+	 *            The Master connection for the server
+	 * @throws IOException
+	 */
+	private static void startGame(GameClock clk, World game, Master connection)
+			throws IOException {
+
+		clk.start(); // start the clock ticking!!!
+
+		// loop forever
+		while (connection != null && connection.isAlive()) {
+			Thread.yield();
+		}
+	}
+
+	/**
+	 * Runs the client by connecting to the server at the given address
+	 * 
+	 * @param addr
+	 *            Address of server to join
+	 * @param gameFrame
+	 *            GUI holding game
+	 * @param uid
+	 *            ID hashed form user name
+	 * @throws IOException
+	 */
+	public static void runClient(String addr, GameFrame gameFrame, int uid)
+			throws IOException {
+		try {
+			Socket s = new Socket(addr, 4443);
+			DataOutputStream out = new DataOutputStream(s.getOutputStream());
+			out.writeInt(uid);
+			out.flush();
+			System.out.println("CLIENT CONNECTED TO " + addr + ":4443");
+			Slave slave = new Slave(s, uid);
+			slave.start();
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+			new GameFrame(true);
+		}
+	}
+
+}
